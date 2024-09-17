@@ -1,218 +1,1281 @@
 {
-    "available_suttas": [
-        {
+    "available_suttas": {
+        "dn2": {
+            "id": "DN 2",
+            "title": "The Fruits of the Ascetic Life",
+            "pali_title": "Samannaphalasutta",
+            "html_path": "suttas/html/dn/dn2_html.json",
+            "root_path": "suttas/root/dn/dn2_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/dn/dn2_translation-en-anigha.json",
+            "comment_path": "suttas/comment/dn/dn2_comment-en-anigha.json",
+            "date_added": "2024-05-21T11:16:24+02:00"
+        },
+        "dn10": {
+            "id": "DN 10",
+            "title": "With Subha",
+            "pali_title": "Subhasutta",
+            "html_path": "suttas/html/dn/dn10_html.json",
+            "root_path": "suttas/root/dn/dn10_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/dn/dn10_translation-en-anigha.json",
+            "comment_path": "suttas/comment/dn/dn10_comment-en-anigha.json",
+            "date_added": "2024-06-01T08:01:51+02:00",
+            "heading": "Sīla, Samādhi, Paññā"
+        },
+        "mn1": {
             "id": "MN 1",
-            "title": "The Explanation of the Root "
+            "title": "The Explanation of the Root",
+            "pali_title": "Mulapariyayasutta",
+            "html_path": "suttas/html/mn/mn1_html.json",
+            "root_path": "suttas/root/mn/mn1_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn1_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn1_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn2": {
             "id": "MN 2",
-            "title": "All the Influxes "
+            "title": "All the Influxes",
+            "pali_title": "Sabbasavasutta",
+            "html_path": "suttas/html/mn/mn2_html.json",
+            "root_path": "suttas/root/mn/mn2_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn2_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn2_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00",
+            "heading": "Gateway to the Dhamma"
         },
-        {
+        "mn3": {
             "id": "MN 3",
-            "title": "Heirs of the Dhamma "
+            "title": "Heirs of the Dhamma",
+            "pali_title": "Dhammadayadasutta",
+            "html_path": "suttas/html/mn/mn3_html.json",
+            "root_path": "suttas/root/mn/mn3_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn3_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn3_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn4": {
             "id": "MN 4",
-            "title": "Fear and Dread "
+            "title": "Fear and Dread",
+            "pali_title": "Bhayabheravasutta",
+            "html_path": "suttas/html/mn/mn4_html.json",
+            "root_path": "suttas/root/mn/mn4_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn4_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn4_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn5": {
             "id": "MN 5",
-            "title": "Unblemished "
+            "title": "Unblemished",
+            "pali_title": "Ananganasutta",
+            "html_path": "suttas/html/mn/mn5_html.json",
+            "root_path": "suttas/root/mn/mn5_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn5_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn5_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn6": {
             "id": "MN 6",
-            "title": "One Might Wish "
+            "title": "One Might Wish",
+            "pali_title": "Akankheyyasutta",
+            "html_path": "suttas/html/mn/mn6_html.json",
+            "root_path": "suttas/root/mn/mn6_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn6_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn6_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn7": {
             "id": "MN 7",
-            "title": "The Simile of the Cloth "
+            "title": "The Simile of the Cloth",
+            "pali_title": "Vatthasutta",
+            "html_path": "suttas/html/mn/mn7_html.json",
+            "root_path": "suttas/root/mn/mn7_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn7_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn7_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn8": {
             "id": "MN 8",
-            "title": "Wearing Away "
+            "title": "Wearing Away",
+            "pali_title": "Sallekhasutta",
+            "html_path": "suttas/html/mn/mn8_html.json",
+            "root_path": "suttas/root/mn/mn8_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn8_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn8_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn9": {
             "id": "MN 9",
-            "title": "Right View "
+            "title": "Right View",
+            "pali_title": "Sammaditthisutta",
+            "html_path": "suttas/html/mn/mn9_html.json",
+            "root_path": "suttas/root/mn/mn9_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn9_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn9_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn10": {
             "id": "MN 10",
-            "title": "Establishments of Recollection "
+            "title": "Establishments of Recollection",
+            "pali_title": "Satipatthanasutta",
+            "html_path": "suttas/html/mn/mn10_html.json",
+            "root_path": "suttas/root/mn/mn10_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn10_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn10_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn11": {
             "id": "MN 11",
-            "title": "The Shorter Discourse on the Lion’s Roar "
+            "title": "The Shorter Discourse on the Lion’s Roar",
+            "pali_title": "Culasihanadasutta",
+            "html_path": "suttas/html/mn/mn11_html.json",
+            "root_path": "suttas/root/mn/mn11_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn11_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn11_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn12": {
             "id": "MN 12",
-            "title": "The Longer Discourse on the Lion’s Roar "
+            "title": "The Longer Discourse on the Lion’s Roar",
+            "pali_title": "Mahasihanadasutta",
+            "html_path": "suttas/html/mn/mn12_html.json",
+            "root_path": "suttas/root/mn/mn12_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn12_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn12_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn13": {
             "id": "MN 13",
-            "title": "The Longer Discourse on the Mass of Suffering "
+            "title": "The Longer Discourse on the Mass of Suffering",
+            "pali_title": "Mahadukkhakkhandhasutta",
+            "html_path": "suttas/html/mn/mn13_html.json",
+            "root_path": "suttas/root/mn/mn13_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn13_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn13_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn14": {
             "id": "MN 14",
-            "title": "The Shorter Discourse on the Mass of Suffering "
+            "title": "The Shorter Discourse on the Mass of Suffering",
+            "pali_title": "Culadukkhakkhandhasutta",
+            "html_path": "suttas/html/mn/mn14_html.json",
+            "root_path": "suttas/root/mn/mn14_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn14_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn14_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn15": {
             "id": "MN 15",
-            "title": "Evaluation "
+            "title": "Evaluation",
+            "pali_title": "Anumanasutta",
+            "html_path": "suttas/html/mn/mn15_html.json",
+            "root_path": "suttas/root/mn/mn15_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn15_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn15_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn16": {
             "id": "MN 16",
-            "title": "Obstinacies "
+            "title": "Obstinacies",
+            "pali_title": "Cetokhilasutta",
+            "html_path": "suttas/html/mn/mn16_html.json",
+            "root_path": "suttas/root/mn/mn16_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn16_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn16_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00",
+            "heading": "Impediments to Progress"
         },
-        {
+        "mn17": {
             "id": "MN 17",
-            "title": "Jungle Thickets "
+            "title": "Jungle Thickets",
+            "pali_title": "Vanapatthasutta",
+            "html_path": "suttas/html/mn/mn17_html.json",
+            "root_path": "suttas/root/mn/mn17_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn17_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn17_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn18": {
             "id": "MN 18",
-            "title": "The Lump of Honey "
+            "title": "The Lump of Honey",
+            "pali_title": "Madhupindikasutta",
+            "html_path": "suttas/html/mn/mn18_html.json",
+            "root_path": "suttas/root/mn/mn18_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn18_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn18_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00",
+            "heading": "Beyond All Thoughts"
         },
-        {
+        "mn19": {
             "id": "MN 19",
-            "title": "Two Kinds of Thought "
+            "title": "Two Kinds of Thought",
+            "pali_title": "Dvedhavitakkasutta",
+            "html_path": "suttas/html/mn/mn19_html.json",
+            "root_path": "suttas/root/mn/mn19_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn19_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn19_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00",
+            "heading": "Renunciation -> Jhāna"
         },
-        {
+        "mn20": {
             "id": "MN 20",
-            "title": "The Settling of Thoughts "
+            "title": "The Settling of Thoughts",
+            "pali_title": "Vitakkasanthanasutta",
+            "html_path": "suttas/html/mn/mn20_html.json",
+            "root_path": "suttas/root/mn/mn20_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn20_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn20_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn21": {
             "id": "MN 21",
-            "title": "The Simile of the Saw "
+            "title": "The Simile of the Saw",
+            "pali_title": "Kakacupamasutta",
+            "html_path": "suttas/html/mn/mn21_html.json",
+            "root_path": "suttas/root/mn/mn21_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn21_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn21_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn22": {
             "id": "MN 22",
-            "title": "The Simile of the Venomous Snake "
+            "title": "The Simile of the Venomous Snake",
+            "pali_title": "Alagaddupamasutta",
+            "html_path": "suttas/html/mn/mn22_html.json",
+            "root_path": "suttas/root/mn/mn22_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn22_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn22_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00",
+            "heading": "A Pernicious View"
         },
-        {
+        "mn23": {
             "id": "MN 23",
-            "title": "The Ant-Hill "
+            "title": "The Ant-Hill",
+            "pali_title": "Vammikasutta",
+            "html_path": "suttas/html/mn/mn23_html.json",
+            "root_path": "suttas/root/mn/mn23_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn23_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn23_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn24": {
             "id": "MN 24",
-            "title": "The Relay Chariots "
+            "title": "The Relay Chariots",
+            "pali_title": "Rathavinitasutta",
+            "html_path": "suttas/html/mn/mn24_html.json",
+            "root_path": "suttas/root/mn/mn24_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn24_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn24_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00",
+            "heading": "Stages of Purification"
         },
-        {
+        "mn25": {
             "id": "MN 25",
-            "title": "The Bait "
+            "title": "The Bait",
+            "pali_title": "Nivapasutta",
+            "html_path": "suttas/html/mn/mn25_html.json",
+            "root_path": "suttas/root/mn/mn25_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn25_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn25_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn26": {
             "id": "MN 26",
-            "title": "The Heap of Snares "
+            "title": "The Heap of Snares",
+            "pali_title": "Pasarasisutta",
+            "html_path": "suttas/html/mn/mn26_html.json",
+            "root_path": "suttas/root/mn/mn26_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn26_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn26_comment-en-anigha.json",
+            "date_added": "2024-03-17T07:49:46+01:00"
         },
-        {
+        "mn27": {
             "id": "MN 27",
-            "title": "The Shorter Simile of the Elephant’s Footprint "
+            "title": "The Shorter Simile of the Elephant’s Footprint",
+            "pali_title": "Culahatthipadopamasutta",
+            "html_path": "suttas/html/mn/mn27_html.json",
+            "root_path": "suttas/root/mn/mn27_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn27_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn27_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn28": {
             "id": "MN 28",
-            "title": "The Longer Simile of the Elephant’s Footprint "
+            "title": "The Longer Simile of the Elephant’s Footprint",
+            "pali_title": "Mahahatthipadopamasutta",
+            "html_path": "suttas/html/mn/mn28_html.json",
+            "root_path": "suttas/root/mn/mn28_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn28_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn28_comment-en-anigha.json",
+            "date_added": "2024-03-04T22:31:00+01:00"
         },
-        {
+        "mn29": {
             "id": "MN 29",
-            "title": "The Longer Simile of the Heartwood "
+            "title": "The Longer Simile of the Heartwood",
+            "pali_title": "Mahasaropamasutta",
+            "html_path": "suttas/html/mn/mn29_html.json",
+            "root_path": "suttas/root/mn/mn29_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn29_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn29_comment-en-anigha.json",
+            "date_added": "2024-03-19T16:24:56+01:00"
         },
-        {
+        "mn30": {
             "id": "MN 30",
-            "title": "The Shorter Simile of the Heartwood "
+            "title": "The Shorter Simile of the Heartwood",
+            "pali_title": "Culasaropamasutta",
+            "html_path": "suttas/html/mn/mn30_html.json",
+            "root_path": "suttas/root/mn/mn30_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn30_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn30_comment-en-anigha.json",
+            "date_added": "2024-03-19T16:24:56+01:00"
         },
-        {
+        "mn31": {
             "id": "MN 31",
-            "title": "The Shorter Discourse at Gosiṅga "
+            "title": "The Shorter Discourse at Gosiṅga",
+            "pali_title": "Culagosingasutta",
+            "html_path": "suttas/html/mn/mn31_html.json",
+            "root_path": "suttas/root/mn/mn31_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn31_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn31_comment-en-anigha.json",
+            "date_added": "2024-03-20T07:36:33+01:00"
         },
-        {
+        "mn32": {
             "id": "MN 32",
-            "title": "The Longer Discourse at Gosiṅga "
+            "title": "The Longer Discourse at Gosiṅga",
+            "pali_title": "Mahagosingasutta",
+            "html_path": "suttas/html/mn/mn32_html.json",
+            "root_path": "suttas/root/mn/mn32_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn32_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn32_comment-en-anigha.json",
+            "date_added": "2024-03-20T14:53:44+01:00"
         },
-        {
+        "mn33": {
             "id": "MN 33",
-            "title": "The Longer Discourse on the Cowherd "
+            "title": "The Longer Discourse on the Cowherd",
+            "pali_title": "Mahagopalakasutta",
+            "html_path": "suttas/html/mn/mn33_html.json",
+            "root_path": "suttas/root/mn/mn33_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn33_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn33_comment-en-anigha.json",
+            "date_added": "2024-03-26T06:54:17+01:00"
         },
-        {
+        "mn34": {
             "id": "MN 34",
-            "title": "The Shorter Discourse on the Cowherd "
+            "title": "The Shorter Discourse on the Cowherd",
+            "pali_title": "Culagopalakasutta",
+            "html_path": "suttas/html/mn/mn34_html.json",
+            "root_path": "suttas/root/mn/mn34_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn34_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn34_comment-en-anigha.json",
+            "date_added": "2024-03-26T07:49:03+01:00"
         },
-        {
+        "mn35": {
             "id": "MN 35",
-            "title": "The Shorter Discourse With Saccaka "
+            "title": "The Shorter Discourse With Saccaka",
+            "pali_title": "Culasaccakasutta",
+            "html_path": "suttas/html/mn/mn35_html.json",
+            "root_path": "suttas/root/mn/mn35_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn35_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn35_comment-en-anigha.json",
+            "date_added": "2024-03-27T15:51:25+01:00"
         },
-        {
+        "mn36": {
             "id": "MN 36",
-            "title": "The Longer Discourse With Saccaka "
+            "title": "The Longer Discourse With Saccaka",
+            "pali_title": "Mahasaccakasutta",
+            "html_path": "suttas/html/mn/mn36_html.json",
+            "root_path": "suttas/root/mn/mn36_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn36_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn36_comment-en-anigha.json",
+            "date_added": "2024-04-06T13:12:47+02:00"
         },
-        {
+        "mn37": {
             "id": "MN 37",
-            "title": "The Shorter Discourse on the Exhaustion of Craving "
+            "title": "The Shorter Discourse on the Destruction of Craving",
+            "pali_title": "Culatanhasankhayasutta",
+            "html_path": "suttas/html/mn/mn37_html.json",
+            "root_path": "suttas/root/mn/mn37_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn37_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn37_comment-en-anigha.json",
+            "date_added": "2024-04-09T15:17:36+02:00"
         },
-        {
+        "mn38": {
             "id": "MN 38",
-            "title": "The Longer Discourse on the Exhaustion of Craving "
+            "title": "The Longer Discourse on the Destruction of Craving",
+            "pali_title": "Mahatanhasankhayasutta",
+            "html_path": "suttas/html/mn/mn38_html.json",
+            "root_path": "suttas/root/mn/mn38_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn38_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn38_comment-en-anigha.json",
+            "date_added": "2024-04-15T11:07:18+02:00",
+            "heading": "Dependent Origination"
         },
-        {
+        "mn39": {
             "id": "MN 39",
-            "title": "The Longer Discourse at Assapura "
+            "title": "The Longer Discourse at Assapura",
+            "pali_title": "Mahaassapurasutta",
+            "html_path": "suttas/html/mn/mn39_html.json",
+            "root_path": "suttas/root/mn/mn39_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn39_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn39_comment-en-anigha.json",
+            "date_added": "2024-04-22T06:10:47+02:00",
+            "heading": "Stages of Training"
         },
-        {
+        "mn40": {
             "id": "MN 40",
-            "title": "The Shorter Discourse at Assapura "
+            "title": "The Shorter Discourse at Assapura",
+            "pali_title": "Culaassapurasutta",
+            "html_path": "suttas/html/mn/mn40_html.json",
+            "root_path": "suttas/root/mn/mn40_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn40_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn40_comment-en-anigha.json",
+            "date_added": "2024-04-26T05:05:02+02:00"
         },
-        {
+        "mn41": {
             "id": "MN 41",
-            "title": "The People of Sālā "
+            "title": "The People of Sālā",
+            "pali_title": "Saleyyakasutta",
+            "html_path": "suttas/html/mn/mn41_html.json",
+            "root_path": "suttas/root/mn/mn41_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn41_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn41_comment-en-anigha.json",
+            "date_added": "2024-04-26T05:26:08+02:00"
         },
-        {
+        "mn42": {
             "id": "MN 42",
-            "title": "The People of Verañjā "
+            "title": "The People of Verañjā",
+            "pali_title": "Veranjakasutta",
+            "html_path": "suttas/html/mn/mn42_html.json",
+            "root_path": "suttas/root/mn/mn42_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn42_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn42_comment-en-anigha.json",
+            "date_added": "2024-04-26T05:29:13+02:00"
         },
-        {
+        "mn43": {
             "id": "MN 43",
-            "title": "The Great Elaboration "
+            "title": "The Great Elaboration",
+            "pali_title": "Mahavedallasutta",
+            "html_path": "suttas/html/mn/mn43_html.json",
+            "root_path": "suttas/root/mn/mn43_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn43_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn43_comment-en-anigha.json",
+            "date_added": "2024-04-26T07:59:05+02:00"
         },
-        {
+        "mn44": {
+            "id": "MN 44",
+            "title": "The Shorter Elaboration",
+            "pali_title": "Culavedallasutta",
+            "html_path": "suttas/html/mn/mn44_html.json",
+            "root_path": "suttas/root/mn/mn44_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn44_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn44_comment-en-anigha.json",
+            "date_added": "2024-04-30T07:44:46+02:00"
+        },
+        "mn45": {
+            "id": "MN 45",
+            "title": "The Shorter Discourse on Undertakings",
+            "pali_title": "Culadhammasamadanasutta",
+            "html_path": "suttas/html/mn/mn45_html.json",
+            "root_path": "suttas/root/mn/mn45_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn45_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn45_comment-en-anigha.json",
+            "date_added": "2024-05-01T10:54:07+02:00"
+        },
+        "mn46": {
+            "id": "MN 46",
+            "title": "The Great Discourse on Undertakings",
+            "pali_title": "Mahadhammasamadanasutta",
+            "html_path": "suttas/html/mn/mn46_html.json",
+            "root_path": "suttas/root/mn/mn46_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn46_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn46_comment-en-anigha.json",
+            "date_added": "2024-05-01T10:54:07+02:00"
+        },
+        "mn47": {
+            "id": "MN 47",
+            "title": "The Inquirer",
+            "pali_title": "Vimamsakasutta",
+            "html_path": "suttas/html/mn/mn47_html.json",
+            "root_path": "suttas/root/mn/mn47_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn47_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn47_comment-en-anigha.json",
+            "date_added": "2024-05-01T10:54:07+02:00"
+        },
+        "mn48": {
+            "id": "MN 48",
+            "title": "The Bhikkhus of Kosambī",
+            "pali_title": "Kosambiyasutta",
+            "html_path": "suttas/html/mn/mn48_html.json",
+            "root_path": "suttas/root/mn/mn48_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn48_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn48_comment-en-anigha.json",
+            "date_added": "2024-05-01T10:54:07+02:00"
+        },
+        "mn49": {
+            "id": "MN 49",
+            "title": "On the Invitation of Brahmā",
+            "pali_title": "Brahmanimantanikasutta",
+            "html_path": "suttas/html/mn/mn49_html.json",
+            "root_path": "suttas/root/mn/mn49_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn49_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn49_comment-en-anigha.json",
+            "date_added": "2024-05-03T12:56:39+02:00"
+        },
+        "mn50": {
+            "id": "MN 50",
+            "title": "The Rebuke of Māra",
+            "pali_title": "Maratajjaniyasutta",
+            "html_path": "suttas/html/mn/mn50_html.json",
+            "root_path": "suttas/root/mn/mn50_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn50_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn50_comment-en-anigha.json",
+            "date_added": "2024-05-04T08:16:14+02:00"
+        },
+        "mn51": {
+            "id": "MN 51",
+            "title": "With Kandaraka",
+            "pali_title": "Kandarakasutta",
+            "html_path": "suttas/html/mn/mn51_html.json",
+            "root_path": "suttas/root/mn/mn51_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn51_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn51_comment-en-anigha.json",
+            "date_added": "2024-05-16T08:14:36+02:00"
+        },
+        "mn52": {
+            "id": "MN 52",
+            "title": "The Wealthy Citizen",
+            "pali_title": "Atthakanagarasutta",
+            "html_path": "suttas/html/mn/mn52_html.json",
+            "root_path": "suttas/root/mn/mn52_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn52_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn52_comment-en-anigha.json",
+            "date_added": "2024-05-17T06:59:59+02:00"
+        },
+        "mn53": {
+            "id": "MN 53",
+            "title": "A Trainee",
+            "pali_title": "Sekhasutta",
+            "html_path": "suttas/html/mn/mn53_html.json",
+            "root_path": "suttas/root/mn/mn53_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn53_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn53_comment-en-anigha.json",
+            "date_added": "2024-05-17T07:00:39+02:00",
+            "heading": "Qualities of a Trainee"
+        },
+        "mn54": {
+            "id": "MN 54",
+            "title": "With Potaliya the Householder",
+            "pali_title": "Potaliyasutta",
+            "html_path": "suttas/html/mn/mn54_html.json",
+            "root_path": "suttas/root/mn/mn54_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn54_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn54_comment-en-anigha.json",
+            "date_added": "2024-05-29T07:49:54+02:00"
+        },
+        "mn55": {
+            "id": "MN 55",
+            "title": "With Jīvaka",
+            "pali_title": "Jivakasutta",
+            "html_path": "suttas/html/mn/mn55_html.json",
+            "root_path": "suttas/root/mn/mn55_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn55_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn55_comment-en-anigha.json",
+            "date_added": "2024-06-02T08:26:12+02:00"
+        },
+        "mn56": {
+            "id": "MN 56",
+            "title": "With Upāli",
+            "pali_title": "Upalisutta",
+            "html_path": "suttas/html/mn/mn56_html.json",
+            "root_path": "suttas/root/mn/mn56_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn56_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn56_comment-en-anigha.json",
+            "date_added": "2024-06-05T07:44:53+02:00"
+        },
+        "mn57": {
+            "id": "MN 57",
+            "title": "The Ascetic Who Behaved Like a Dog",
+            "pali_title": "Kukkuravatikasutta",
+            "html_path": "suttas/html/mn/mn57_html.json",
+            "root_path": "suttas/root/mn/mn57_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn57_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn57_comment-en-anigha.json",
+            "date_added": "2024-06-07T08:12:54+02:00"
+        },
+        "mn58": {
+            "id": "MN 58",
+            "title": "With Prince Abhaya",
+            "pali_title": "Abhayarajakumarasutta",
+            "html_path": "suttas/html/mn/mn58_html.json",
+            "root_path": "suttas/root/mn/mn58_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn58_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn58_comment-en-anigha.json",
+            "date_added": "2024-06-08T07:19:30+02:00"
+        },
+        "mn59": {
+            "id": "MN 59",
+            "title": "The Many Kinds of Feeling",
+            "pali_title": "Bahuvedaniyasutta",
+            "html_path": "suttas/html/mn/mn59_html.json",
+            "root_path": "suttas/root/mn/mn59_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn59_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn59_comment-en-anigha.json",
+            "date_added": "2024-06-11T15:21:39+02:00"
+        },
+        "mn60": {
+            "id": "MN 60",
+            "title": "Unfailing",
+            "pali_title": "Apannakasutta",
+            "html_path": "suttas/html/mn/mn60_html.json",
+            "root_path": "suttas/root/mn/mn60_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn60_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn60_comment-en-anigha.json",
+            "date_added": "2024-06-14T15:14:36+02:00"
+        },
+        "mn61": {
+            "id": "MN 61",
+            "title": "Advice to Venerable Rāhula at Ambalaṭṭhika",
+            "pali_title": "Ambalatthikarahulovadasutta",
+            "html_path": "suttas/html/mn/mn61_html.json",
+            "root_path": "suttas/root/mn/mn61_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn61_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn61_comment-en-anigha.json",
+            "date_added": "2024-06-18T06:41:33+02:00",
+            "heading": "Checking Your Actions"
+        },
+        "mn62": {
+            "id": "MN 62",
+            "title": "The Longer Advice to Venerable Rāhula",
+            "pali_title": "Maharahulovadasutta",
+            "html_path": "suttas/html/mn/mn62_html.json",
+            "root_path": "suttas/root/mn/mn62_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn62_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn62_comment-en-anigha.json",
+            "date_added": "2024-06-20T07:34:30+02:00"
+        },
+        "mn63": {
+            "id": "MN 63",
+            "title": "The Shorter Discourse With Māluṅkyaputta",
+            "pali_title": "Culamalukyasutta",
+            "html_path": "suttas/html/mn/mn63_html.json",
+            "root_path": "suttas/root/mn/mn63_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn63_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn63_comment-en-anigha.json",
+            "date_added": "2024-06-21T11:21:14+02:00"
+        },
+        "mn64": {
+            "id": "MN 64",
+            "title": "The Longer Discourse With Māluṅkya",
+            "pali_title": "Mahamalukyasutta",
+            "html_path": "suttas/html/mn/mn64_html.json",
+            "root_path": "suttas/root/mn/mn64_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn64_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn64_comment-en-anigha.json",
+            "date_added": "2024-06-23T06:21:07+02:00"
+        },
+        "mn107": {
+            "id": "MN 107",
+            "title": "With Moggallāna the Accountant",
+            "pali_title": "Ganakamoggallanasutta",
+            "html_path": "suttas/html/mn/mn107_html.json",
+            "root_path": "suttas/root/mn/mn107_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn107_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn107_comment-en-anigha.json",
+            "date_added": "2024-05-26T15:19:32+02:00",
+            "heading": "The Gradual Training"
+        },
+        "mn134": {
+            "id": "MN 134",
+            "title": "Lomasakaṅgiya and One Fine Night",
+            "pali_title": "Lomasakangiyabhaddekarattasutta",
+            "html_path": "suttas/html/mn/mn134_html.json",
+            "root_path": "suttas/root/mn/mn134_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/mn/mn134_translation-en-anigha.json",
+            "comment_path": "suttas/comment/mn/mn134_comment-en-anigha.json",
+            "date_added": "2024-07-04T07:21:42+02:00"
+        },
+        "sn1.1": {
+            "id": "SN 1.1",
+            "title": "Crossing the Flood",
+            "pali_title": "Oghataranasutta",
+            "html_path": "suttas/html/sn/sn1/sn1.1_html.json",
+            "root_path": "suttas/root/sn/sn1/sn1.1_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn1/sn1.1_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn1/sn1.1_comment-en-anigha.json",
+            "date_added": "2024-07-04T22:04:54+02:00",
+            "heading": "The Middle Way (Not ”Moderation”)"
+        },
+        "sn1.20": {
+            "id": "SN 1.20",
+            "title": "With Samiddhi",
+            "pali_title": "Samiddhisutta",
+            "html_path": "suttas/html/sn/sn1/sn1.20_html.json",
+            "root_path": "suttas/root/sn/sn1/sn1.20_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn1/sn1.20_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn1/sn1.20_comment-en-anigha.json",
+            "date_added": "2024-06-09T12:00:20+02:00"
+        },
+        "sn12.67": {
+            "id": "SN 12.67",
+            "title": "Bundles of Reeds",
+            "pali_title": "Nalakalapisutta",
+            "html_path": "suttas/html/sn/sn12/sn12.67_html.json",
+            "root_path": "suttas/root/sn/sn12/sn12.67_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn12/sn12.67_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn12/sn12.67_comment-en-anigha.json",
+            "date_added": "2024-04-28T06:02:28+02:00",
+            "heading": "Dependent Origination"
+        },
+        "sn22.81": {
+            "id": "SN 22.81",
+            "title": "At Pārileyya",
+            "pali_title": "Palileyyasutta",
+            "html_path": "suttas/html/sn/sn22/sn22.81_html.json",
+            "root_path": "suttas/root/sn/sn22/sn22.81_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn22/sn22.81_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn22/sn22.81_comment-en-anigha.json",
+            "date_added": "2024-05-04T08:16:28+02:00"
+        },
+        "sn22.101": {
+            "id": "SN 22.101",
+            "title": "The Adze",
+            "pali_title": "Vasijatasutta",
+            "html_path": "suttas/html/sn/sn22/sn22.101_html.json",
+            "root_path": "suttas/root/sn/sn22/sn22.101_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn22/sn22.101_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn22/sn22.101_comment-en-anigha.json",
+            "date_added": "2024-07-22T08:14:21+02:00"
+        },
+        "sn35.70": {
+            "id": "SN 35.70",
+            "title": "Presently Evident (With Upavāna)",
+            "pali_title": "Upavanasanditthikasutta",
+            "html_path": "suttas/html/sn/sn35/sn35.70_html.json",
+            "root_path": "suttas/root/sn/sn35/sn35.70_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn35/sn35.70_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn35/sn35.70_comment-en-anigha.json",
+            "date_added": "2024-05-15T07:20:31+02:00"
+        },
+        "sn35.96": {
+            "id": "SN 35.96",
+            "title": "Falling Away",
+            "pali_title": "Parihanadhammasutta",
+            "html_path": "suttas/html/sn/sn35/sn35.96_html.json",
+            "root_path": "suttas/root/sn/sn35/sn35.96_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn35/sn35.96_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn35/sn35.96_comment-en-anigha.json",
+            "date_added": "2024-04-28T05:19:57+02:00"
+        },
+        "sn35.97": {
+            "id": "SN 35.97",
+            "title": "One Who Lives Heedlessly",
+            "pali_title": "Pamadaviharisutta",
+            "html_path": "suttas/html/sn/sn35/sn35.97_html.json",
+            "root_path": "suttas/root/sn/sn35/sn35.97_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn35/sn35.97_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn35/sn35.97_comment-en-anigha.json",
+            "date_added": "2024-07-27T07:30:46+02:00"
+        },
+        "sn35.228": {
+            "id": "SN 35.228",
+            "title": "The Ocean (1st)",
+            "pali_title": "Pathamasamuddasutta",
+            "html_path": "suttas/html/sn/sn35/sn35.228_html.json",
+            "root_path": "suttas/root/sn/sn35/sn35.228_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn35/sn35.228_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn35/sn35.228_comment-en-anigha.json",
+            "date_added": "2024-08-25T07:44:28+02:00"
+        },
+        "sn35.246": {
             "id": "SN 35.246",
-            "title": "The Simile of the Lute "
+            "title": "The Simile of the Lute",
+            "pali_title": "Vinopamasutta",
+            "html_path": "suttas/html/sn/sn35/sn35.246_html.json",
+            "root_path": "suttas/root/sn/sn35/sn35.246_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn35/sn35.246_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn35/sn35.246_comment-en-anigha.json",
+            "date_added": "2024-03-29T11:38:15+01:00",
+            "heading": "Taming the Mind"
         },
-        {
+        "sn36.6": {
             "id": "SN 36.6",
-            "title": "The Arrow "
+            "title": "The Arrow",
+            "pali_title": "Sallasutta",
+            "html_path": "suttas/html/sn/sn36/sn36.6_html.json",
+            "root_path": "suttas/root/sn/sn36/sn36.6_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn36/sn36.6_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn36/sn36.6_comment-en-anigha.json",
+            "date_added": "2024-03-28T17:18:15+01:00"
         },
-        {
+        "sn40.1": {
+            "id": "SN 40.1",
+            "title": "A Question About the First jhāna",
+            "pali_title": "Pathamajhanapanhasutta",
+            "html_path": "suttas/html/sn/sn40/sn40.1_html.json",
+            "root_path": "suttas/root/sn/sn40/sn40.1_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn40/sn40.1_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn40/sn40.1_comment-en-anigha.json",
+            "date_added": "2024-07-13T17:34:10+02:00"
+        },
+        "sn45.55": {
+            "id": "SN 45.55",
+            "title": "Accomplishment in through-the-origin attention (1st)",
+            "pali_title": "Yonisomanasikarasampadasutta",
+            "html_path": "suttas/html/sn/sn45/sn45.55_html.json",
+            "root_path": "suttas/root/sn/sn45/sn45.55_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn45/sn45.55_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn45/sn45.55_comment-en-anigha.json",
+            "date_added": "2024-05-19T16:21:27+02:00"
+        },
+        "sn47.8": {
             "id": "SN 47.8",
-            "title": "The Cook "
+            "title": "The Cook",
+            "pali_title": "Sudasutta",
+            "html_path": "suttas/html/sn/sn47/sn47.8_html.json",
+            "root_path": "suttas/root/sn/sn47/sn47.8_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn47/sn47.8_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn47/sn47.8_comment-en-anigha.json",
+            "date_added": "2024-04-24T08:19:39+02:00",
+            "heading": "Sign of the Mind"
         },
-        {
+        "sn55.5": {
+            "id": "SN 55.5",
+            "title": "With Sāriputta (2nd)",
+            "pali_title": "Dutiyasariputtasutta",
+            "html_path": "suttas/html/sn/sn55/sn55.5_html.json",
+            "root_path": "suttas/root/sn/sn55/sn55.5_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn55/sn55.5_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn55/sn55.5_comment-en-anigha.json",
+            "date_added": "2024-07-29T17:39:52+02:00"
+        },
+        "sn56.30": {
+            "id": "SN 56.30",
+            "title": "With Gavampati",
+            "pali_title": "Gavampatisutta",
+            "html_path": "suttas/html/sn/sn56/sn56.30_html.json",
+            "root_path": "suttas/root/sn/sn56/sn56.30_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn56/sn56.30_translation-en-anigha.json",
+            "comment_path": "suttas/comment/sn/sn56/sn56.30_comment-en-anigha.json",
+            "date_added": "2024-08-01T14:48:28+02:00"
+        },
+        "sn56.40": {
+            "id": "SN 56.40",
+            "title": "Looking For a Debate",
+            "pali_title": "Vadatthikasutta",
+            "html_path": "suttas/html/sn/sn56/sn56.40_html.json",
+            "root_path": "suttas/root/sn/sn56/sn56.40_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/sn/sn56/sn56.40_translation-en-anigha.json",
+            "comment_path": null,
+            "date_added": "2024-08-03T13:39:32+02:00"
+        },
+        "an1.51-60": {
+            "id": "AN 1.51-60",
+            "title": "The Chapter on a Finger-Snap",
+            "pali_title": "Accharasanghatavagga",
+            "html_path": "suttas/html/an/an1/an1.51-60_html.json",
+            "root_path": "suttas/root/an/an1/an1.51-60_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an1/an1.51-60_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an1/an1.51-60_comment-en-anigha.json",
+            "date_added": "2024-05-03T12:56:19+02:00"
+        },
+        "an2.11-20": {
+            "id": "AN 2.11-20",
+            "title": "The Chapter on Disciplinary Issues",
+            "pali_title": "Adhikaranavagga",
+            "html_path": "suttas/html/an/an2/an2.11-20_html.json",
+            "root_path": "suttas/root/an/an2/an2.11-20_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an2/an2.11-20_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an2/an2.11-20_comment-en-anigha.json",
+            "date_added": "2024-07-29T17:35:18+02:00"
+        },
+        "an3.63": {
+            "id": "AN 3.63",
+            "title": "At Venāgapura",
+            "pali_title": "Venagapurasutta",
+            "html_path": "suttas/html/an/an3/an3.63_html.json",
+            "root_path": "suttas/root/an/an3/an3.63_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an3/an3.63_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an3/an3.63_comment-en-anigha.json",
+            "date_added": "2024-05-17T11:23:19+02:00",
+            "heading": "Walking in Jhāna"
+        },
+        "an3.65": {
+            "id": "AN 3.65",
+            "title": "With the Kālāmas of Kesamutta",
+            "pali_title": "Kesamuttisutta",
+            "html_path": "suttas/html/an/an3/an3.65_html.json",
+            "root_path": "suttas/root/an/an3/an3.65_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an3/an3.65_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an3/an3.65_comment-en-anigha.json",
+            "date_added": "2024-07-03T10:37:21+02:00"
+        },
+        "an3.94": {
+            "id": "AN 3.94",
+            "title": "Springtime",
+            "pali_title": "Saradasutta",
+            "html_path": "suttas/html/an/an3/an3.94_html.json",
+            "root_path": "suttas/root/an/an3/an3.94_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an3/an3.94_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an3/an3.94_comment-en-anigha.json",
+            "date_added": "2024-06-28T14:34:55+02:00"
+        },
+        "an3.101": {
+            "id": "AN 3.101",
+            "title": "A Panner",
+            "pali_title": "Pamsudhovakasutta",
+            "html_path": "suttas/html/an/an3/an3.101_html.json",
+            "root_path": "suttas/root/an/an3/an3.101_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an3/an3.101_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an3/an3.101_comment-en-anigha.json",
+            "date_added": "2024-04-28T04:49:30+02:00",
+            "heading": "From Coarse to Fine Defilements"
+        },
+        "an3.121": {
+            "id": "AN 3.121",
+            "title": "Purity (2nd)",
+            "pali_title": "Dutiyasoceyyasutta",
+            "html_path": "suttas/html/an/an3/an3.121_html.json",
+            "root_path": "suttas/root/an/an3/an3.121_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an3/an3.121_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an3/an3.121_comment-en-anigha.json",
+            "date_added": "2024-06-20T15:36:09+02:00"
+        },
+        "an4.12": {
+            "id": "AN 4.12",
+            "title": "After Virtue",
+            "pali_title": "Silasutta",
+            "html_path": "suttas/html/an/an4/an4.12_html.json",
+            "root_path": "suttas/root/an/an4/an4.12_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an4/an4.12_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an4/an4.12_comment-en-anigha.json",
+            "date_added": "2024-05-15T18:44:10+02:00"
+        },
+        "an4.162": {
+            "id": "AN 4.162",
+            "title": "In Detail",
+            "pali_title": "Vittharasutta",
+            "html_path": "suttas/html/an/an4/an4.162_html.json",
+            "root_path": "suttas/root/an/an4/an4.162_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an4/an4.162_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an4/an4.162_comment-en-anigha.json",
+            "date_added": "2024-06-28T14:00:13+02:00",
+            "heading": "Pain of the Practice Optional?"
+        },
+        "an4.163": {
+            "id": "AN 4.163",
+            "title": "Ugly",
+            "pali_title": "Asubhasutta",
+            "html_path": "suttas/html/an/an4/an4.163_html.json",
+            "root_path": "suttas/root/an/an4/an4.163_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an4/an4.163_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an4/an4.163_comment-en-anigha.json",
+            "date_added": "2024-06-28T14:00:13+02:00"
+        },
+        "an5.24": {
+            "id": "AN 5.24",
+            "title": "Unvirtuous",
+            "pali_title": "Dussilasutta",
+            "html_path": "suttas/html/an/an5/an5.24_html.json",
+            "root_path": "suttas/root/an/an5/an5.24_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an5/an5.24_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an5/an5.24_comment-en-anigha.json",
+            "date_added": "2024-07-10T06:56:46+02:00",
+            "heading": "Vital Conditions for Liberation"
+        },
+        "an5.113": {
+            "id": "AN 5.113",
+            "title": "Right Composure",
+            "pali_title": "Sammasamadhisutta",
+            "html_path": "suttas/html/an/an5/an5.113_html.json",
+            "root_path": "suttas/root/an/an5/an5.113_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an5/an5.113_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an5/an5.113_comment-en-anigha.json",
+            "date_added": "2024-07-10T07:42:32+02:00"
+        },
+        "an5.114": {
+            "id": "AN 5.114",
+            "title": "At Andhakavinda",
+            "pali_title": "Andhakavindasutta",
+            "html_path": "suttas/html/an/an5/an5.114_html.json",
+            "root_path": "suttas/root/an/an5/an5.114_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an5/an5.114_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an5/an5.114_comment-en-anigha.json",
+            "date_added": "2024-05-07T07:33:39+02:00",
+            "heading": "Advice for Beginners"
+        },
+        "an5.151": {
+            "id": "AN 5.151",
+            "title": "Surety in the Right Way (1st)",
+            "pali_title": "Pathamasammattaniyamasutta",
+            "html_path": "suttas/html/an/an5/an5.151_html.json",
+            "root_path": "suttas/root/an/an5/an5.151_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an5/an5.151_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an5/an5.151_comment-en-anigha.json",
+            "date_added": "2024-06-27T05:49:34+02:00"
+        },
+        "an5.152": {
+            "id": "AN 5.152",
+            "title": "Surety in the Right Way (2nd)",
+            "pali_title": "Dutiyasammattaniyamasutta",
+            "html_path": "suttas/html/an/an5/an5.152_html.json",
+            "root_path": "suttas/root/an/an5/an5.152_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an5/an5.152_translation-en-anigha.json",
+            "comment_path": null,
+            "date_added": "2024-06-27T05:49:34+02:00"
+        },
+        "an5.153": {
+            "id": "AN 5.153",
+            "title": "Surety in the Right Way (3rd)",
+            "pali_title": "Tatiyasammattaniyamasutta",
+            "html_path": "suttas/html/an/an5/an5.153_html.json",
+            "root_path": "suttas/root/an/an5/an5.153_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an5/an5.153_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an5/an5.153_comment-en-anigha.json",
+            "date_added": "2024-06-27T05:49:34+02:00"
+        },
+        "an6.10": {
+            "id": "AN 6.10",
+            "title": "With Mahānāma",
+            "pali_title": "Mahanamasutta",
+            "html_path": "suttas/html/an/an6/an6.10_html.json",
+            "root_path": "suttas/root/an/an6/an6.10_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an6/an6.10_translation-en-anigha.json",
+            "comment_path": null,
+            "date_added": "2024-09-05T16:26:48+02:00"
+        },
+        "an6.68": {
             "id": "AN 6.68",
-            "title": "Enjoying Company "
+            "title": "Enjoying Company",
+            "pali_title": "Sanganikaramasutta",
+            "html_path": "suttas/html/an/an6/an6.68_html.json",
+            "root_path": "suttas/root/an/an6/an6.68_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an6/an6.68_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an6/an6.68_comment-en-anigha.json",
+            "date_added": "2024-04-24T08:19:39+02:00",
+            "heading": "Impediments to Stream-Entry"
         },
-        {
+        "an6.73": {
             "id": "AN 6.73",
-            "title": "First Jhāna (1st) "
+            "title": "First Jhāna (1st)",
+            "pali_title": "Pathamatajjhanasutta",
+            "html_path": "suttas/html/an/an6/an6.73_html.json",
+            "root_path": "suttas/root/an/an6/an6.73_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an6/an6.73_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an6/an6.73_comment-en-anigha.json",
+            "date_added": "2024-04-06T13:17:13+02:00"
         },
-        {
+        "an7.38": {
+            "id": "AN 7.38",
+            "title": "Discriminative Insight (1st)",
+            "pali_title": "Pathamapatisambhidasutta",
+            "html_path": "suttas/html/an/an7/an7.38_html.json",
+            "root_path": "suttas/root/an/an7/an7.38_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an7/an7.38_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an7/an7.38_comment-en-anigha.json",
+            "date_added": "2024-07-03T13:38:33+02:00"
+        },
+        "an8.53": {
+            "id": "AN 8.53",
+            "title": "Brief Advice to Gotamī",
+            "pali_title": "Sankhittasutta",
+            "html_path": "suttas/html/an/an8/an8.53_html.json",
+            "root_path": "suttas/root/an/an8/an8.53_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an8/an8.53_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an8/an8.53_comment-en-anigha.json",
+            "date_added": "2024-05-10T06:43:55+02:00",
+            "heading": "Dhamma VS Not Dhamma"
+        },
+        "an9.7": {
+            "id": "AN 9.7",
+            "title": "With Sutavā the Wanderer",
+            "pali_title": "Sutavasutta",
+            "html_path": "suttas/html/an/an9/an9.7_html.json",
+            "root_path": "suttas/root/an/an9/an9.7_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an9/an9.7_translation-en-anigha.json",
+            "comment_path": null,
+            "date_added": "2024-05-15T07:29:23+02:00"
+        },
+        "an9.41": {
             "id": "AN 9.41",
-            "title": "With the Householder Tapussa "
+            "title": "With the Householder Tapussa",
+            "pali_title": "Tapussasutta",
+            "html_path": "suttas/html/an/an9/an9.41_html.json",
+            "root_path": "suttas/root/an/an9/an9.41_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an9/an9.41_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an9/an9.41_comment-en-anigha.json",
+            "date_added": "2024-04-06T13:17:13+02:00",
+            "heading": "What Leads to Samādhi"
         },
-        {
+        "an9.42": {
             "id": "AN 9.42",
-            "title": "Confinement "
+            "title": "Confinement",
+            "pali_title": "Sambadhasutta",
+            "html_path": "suttas/html/an/an9/an9.42_html.json",
+            "root_path": "suttas/root/an/an9/an9.42_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an9/an9.42_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an9/an9.42_comment-en-anigha.json",
+            "date_added": "2024-04-08T16:06:44+02:00",
+            "heading": "Five Senses in Jhāna"
         },
-        {
+        "an10.2": {
+            "id": "AN 10.2",
+            "title": "Exerting an Intention",
+            "pali_title": "Cetanakaraniyasutta",
+            "html_path": "suttas/html/an/an10/an10.2_html.json",
+            "root_path": "suttas/root/an/an10/an10.2_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an10/an10.2_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an10/an10.2_comment-en-anigha.json",
+            "date_added": "2024-09-15T22:11:37+02:00"
+        },
+        "an10.62": {
+            "id": "AN 10.62",
+            "title": "Craving",
+            "pali_title": "Tanhasutta",
+            "html_path": "suttas/html/an/an10/an10.62_html.json",
+            "root_path": "suttas/root/an/an10/an10.62_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an10/an10.62_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an10/an10.62_comment-en-anigha.json",
+            "date_added": "2024-06-18T05:38:34+02:00"
+        },
+        "an10.76": {
+            "id": "AN 10.76",
+            "title": "Three Things",
+            "pali_title": "Tayodhammasutta",
+            "html_path": "suttas/html/an/an10/an10.76_html.json",
+            "root_path": "suttas/root/an/an10/an10.76_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an10/an10.76_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an10/an10.76_comment-en-anigha.json",
+            "date_added": "2024-05-23T08:06:59+02:00",
+            "heading": "Preconditions for Liberation"
+        },
+        "an10.93": {
+            "id": "AN 10.93",
+            "title": "What Is Your View?",
+            "pali_title": "Kimditthikasutta",
+            "html_path": "suttas/html/an/an10/an10.93_html.json",
+            "root_path": "suttas/root/an/an10/an10.93_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an10/an10.93_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an10/an10.93_comment-en-anigha.json",
+            "date_added": "2024-05-08T07:24:25+02:00"
+        },
+        "an10.105": {
+            "id": "AN 10.105",
+            "title": "Knowledge",
+            "pali_title": "Vijjasutta",
+            "html_path": "suttas/html/an/an10/an10.105_html.json",
+            "root_path": "suttas/root/an/an10/an10.105_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an10/an10.105_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an10/an10.105_comment-en-anigha.json",
+            "date_added": "2024-07-28T18:23:49+02:00",
+            "heading": "There Can Be Wrong Liberation"
+        },
+        "an11.9": {
+            "id": "AN 11.9",
+            "title": "With Sandha",
+            "pali_title": "Saddhasutta",
+            "html_path": "suttas/html/an/an11/an11.9_html.json",
+            "root_path": "suttas/root/an/an11/an11.9_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/an/an11/an11.9_translation-en-anigha.json",
+            "comment_path": "suttas/comment/an/an11/an11.9_comment-en-anigha.json",
+            "date_added": "2024-05-15T18:43:56+02:00",
+            "heading": "Wrong Meditation"
+        },
+        "thag1.21": {
+            "id": "Thag 1.21",
+            "title": "Nigrodha",
+            "pali_title": "Nigrodhattheragatha",
+            "html_path": "suttas/html/kn/thag/thag1.21_html.json",
+            "root_path": "suttas/root/kn/thag/thag1.21_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/kn/thag/thag1.21_translation-en-anigha.json",
+            "comment_path": "suttas/comment/kn/thag/thag1.21_comment-en-anigha.json",
+            "date_added": "2024-06-30T08:22:30+02:00",
+            "heading": "The Right Fearlessness"
+        },
+        "thag2.34": {
             "id": "Thag 2.34",
-            "title": "Isidinna (On Sensuality) "
+            "title": "Isidinna",
+            "pali_title": "Isidinnattheragatha",
+            "html_path": "suttas/html/kn/thag/thag2.34_html.json",
+            "root_path": "suttas/root/kn/thag/thag2.34_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/kn/thag/thag2.34_translation-en-anigha.json",
+            "comment_path": null,
+            "date_added": "2024-04-12T05:43:17+02:00",
+            "heading": "On Sensuality"
         },
-        {
+        "thag2.36": {
+            "id": "Thag 2.36",
+            "title": "Nitaka",
+            "pali_title": "Nitakattheragatha",
+            "html_path": "suttas/html/kn/thag/thag2.36_html.json",
+            "root_path": "suttas/root/kn/thag/thag2.36_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/kn/thag/thag2.36_translation-en-anigha.json",
+            "comment_path": "suttas/comment/kn/thag/thag2.36_comment-en-anigha.json",
+            "date_added": "2024-06-30T08:25:15+02:00",
+            "heading": "The Right Dispassion"
+        },
+        "snp4.1": {
             "id": "Snp 4.1",
-            "title": "Attractions ",
+            "title": "Attractions",
+            "pali_title": "Kamasutta",
+            "html_path": "suttas/html/kn/snp/vagga4/snp4.1_html.json",
+            "root_path": "suttas/root/kn/snp/vagga4/snp4.1_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/kn/snp/vagga4/snp4.1_translation-en-anigha.json",
+            "comment_path": "suttas/comment/kn/snp/vagga4/snp4.1_comment-en-anigha.json",
+            "date_added": "2024-04-13T06:19:10+02:00",
             "author": "Sister Medhini"
         },
-        {
+        "snp4.2": {
             "id": "Snp 4.2",
-            "title": "The Octad on the Cave ",
+            "title": "The Octad on the Cave",
+            "pali_title": "Guhatthakasutta",
+            "html_path": "suttas/html/kn/snp/vagga4/snp4.2_html.json",
+            "root_path": "suttas/root/kn/snp/vagga4/snp4.2_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/kn/snp/vagga4/snp4.2_translation-en-anigha.json",
+            "comment_path": "suttas/comment/kn/snp/vagga4/snp4.2_comment-en-anigha.json",
+            "date_added": "2024-03-27T16:00:56+01:00",
+            "author": "Sister Medhini"
+        },
+        "snp4.3": {
+            "id": "Snp 4.3",
+            "title": "The Octad on the Corrupt",
+            "pali_title": "Dutthatthakasutta",
+            "html_path": "suttas/html/kn/snp/vagga4/snp4.3_html.json",
+            "root_path": "suttas/root/kn/snp/vagga4/snp4.3_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/kn/snp/vagga4/snp4.3_translation-en-anigha.json",
+            "comment_path": "suttas/comment/kn/snp/vagga4/snp4.3_comment-en-anigha.json",
+            "date_added": "2024-05-08T07:24:40+02:00",
+            "author": "Sister Medhini"
+        },
+        "snp4.4": {
+            "id": "Snp 4.4",
+            "title": "The Octad on Purity",
+            "pali_title": "Suddhatthakasutta",
+            "html_path": "suttas/html/kn/snp/vagga4/snp4.4_html.json",
+            "root_path": "suttas/root/kn/snp/vagga4/snp4.4_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/kn/snp/vagga4/snp4.4_translation-en-anigha.json",
+            "comment_path": "suttas/comment/kn/snp/vagga4/snp4.4_comment-en-anigha.json",
+            "date_added": "2024-05-25T10:47:01+02:00",
+            "author": "Sister Medhini"
+        },
+        "snp4.9": {
+            "id": "Snp 4.9",
+            "title": "With Māgandiya",
+            "pali_title": "Magandiyasutta",
+            "html_path": "suttas/html/kn/snp/vagga4/snp4.9_html.json",
+            "root_path": "suttas/root/kn/snp/vagga4/snp4.9_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/kn/snp/vagga4/snp4.9_translation-en-anigha.json",
+            "comment_path": "suttas/comment/kn/snp/vagga4/snp4.9_comment-en-anigha.json",
+            "date_added": "2024-06-24T11:48:56+02:00",
+            "author": "Sister Medhini"
+        },
+        "snp5.9": {
+            "id": "Snp 5.9",
+            "title": "The Questions of Hemaka",
+            "pali_title": "Hemakamanavapuccha",
+            "html_path": "suttas/html/kn/snp/vagga5/snp5.9_html.json",
+            "root_path": "suttas/root/kn/snp/vagga5/snp5.9_root-pli-ms.json",
+            "translation_path": "suttas/translation_en/kn/snp/vagga5/snp5.9_translation-en-anigha.json",
+            "comment_path": "suttas/comment/kn/snp/vagga5/snp5.9_comment-en-anigha.json",
+            "date_added": "2024-09-13T09:37:58+02:00",
             "author": "Sister Medhini"
         }
-    ]
+    }
 }
