@@ -43,6 +43,7 @@ body.dark {
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  margin-top: -47px;
 }
 
 #search-bar {
@@ -373,16 +374,8 @@ br {
   flex-direction: row;
   gap: 1rem;
   justify-content: left;
+  align-items: center;
   margin-top: 2rem;
-}
-
-@media only screen and (max-width: 768px) {
-  /* CSS rules for screens smaller than 768px */
-  .links-area {
-      /* margin-top: 2rem; */
-      margin: 1rem;
-      /* Override styles here */
-  }
 }
 
 .links-area a {
@@ -783,6 +776,12 @@ bookmarkButton{
   }
   .bookmark-container p{
     max-width: 60%;
+  }
+  #form {
+    margin-top: initial;
+  }
+  .links-area {
+      margin: 1rem;
   }
 }
 @media only screen and (max-width: 600px) {
