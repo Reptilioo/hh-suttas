@@ -131,6 +131,10 @@ body.dark {
   cursor: pointer;
 }
 
+.dark .icon-button{
+  color: #AAA;
+}
+
 .icon-button:hover {
   color: #201B1F;
 }
