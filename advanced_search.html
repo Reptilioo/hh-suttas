@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Sutta Search</title>
+    <link rel="stylesheet" href="advanced_search.css">
+</head>
+<body>
+    <div id="option-panel">
+        <h2>Search Options</h2>
+        <div class="search-field">
+            <input type="text" placeholder="Search term">
+			<button class="search-btn">Search</button>
+        </div>
+		
+		<div id="configuration">
+			<div id="lang-option" class="options">
+				<h3>Language</h3>
+				<label><input type="checkbox" name="lang" value="en"> English</label>
+				<label><input type="checkbox" name="lang" value="pali"> Pali</label>
+			</div>
+			<div id="book-option" class="options">
+				<h3>Books</h3>
+				<label><input type="checkbox" name="book" value="an"> AN</label>
+				<label><input type="checkbox" name="book" value="dn"> DN</label>
+				<label><input type="checkbox" name="book" value="sn"> SN</label>
+				<label><input type="checkbox" name="book" value="mn"> MN</label>
+				<label><input type="checkbox" name="book" value="kn"> KN</label>
+			</div>
+		</div>
+    </div>
+    
+    <div class="content">
+        <div class="results">
+            <div class="result">
+			    <a href="#" class="link">
+					<h3>Sutta AN 1.1 - Sutta Title</h3>
+					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus non enim et orci fermentum congue. Suspendisse potenti. Quisque volutpat, metus non tempor auctor, lectus odio gravida ex, nec condimentum ex dolor in justo.</p>
+				</a>
+            </div>
+            <div class="result">
+				<a href="#" class="link">
+					<h3>Sutta DN 2.2 - Another Good Sutta</h3>
+					<p>Curabitur sit amet turpis eu magna lacinia egestas ut ut risus. Nam at quam euismod, scelerisque odio sit amet, blandit sapien. Cras congue sagittis arcu, ac malesuada sapien.</p>
+				</a>
+            </div>
+            <div class="result">
+				<a href="#" class="link">
+					<h3>Sutta MN 3.3 - Long Sutta</h3>
+					<p>Maecenas a tellus volutpat, ultrices purus at, efficitur metus. Nam tempor justo a dolor vulputate ullamcorper. Donec vel justo ipsum. Vestibulum volutpat nunc sit amet magna volutpat consequat.</p>
+				</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
