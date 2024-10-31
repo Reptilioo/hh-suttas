@@ -423,6 +423,7 @@ br {
   cursor: pointer;
   outline: none;
   background-color: transparent;
+  margin: .1rem;
 }
 
 #infoButton img,
