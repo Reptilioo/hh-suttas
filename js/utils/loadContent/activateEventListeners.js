@@ -35,7 +35,10 @@ export function activateEventListeners(availableSuttasJson)
     activateDownloadEPUBButton();
     activateMessageListener();
     
-    if (!window.location.href.endsWith("/bookmarks.html") && !window.location.href.endsWith("/glossary.html") && !window.location.href.endsWith("/comments.html")){
+    if (!window.location.href.endsWith("/bookmarks.html") 
+        && !window.location.href.endsWith("/glossary.html") 
+        && !window.location.href.endsWith("/comments.html") 
+        && !window.location.href.endsWith("/advanced-search.html")){
         activateSearchBar(availableSuttasJson);
         activateViewForewordAndGoBackButtons(availableSuttasJson);
         activateHashChangeListener();
