@@ -140,6 +140,7 @@ h2, h3{
 		margin: 0 auto 20px;
 	}
 	#configuration{
+		flex-direction: row;
 		justify-content: space-evenly;
 	}
 	.content{
