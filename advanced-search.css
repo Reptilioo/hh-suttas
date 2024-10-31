@@ -17,6 +17,10 @@ body {
 	background-color: rgb(241, 241, 241);
 }
 
+p{
+	margin-bottom: initial;
+}
+
 .links-area{
 	margin: 0 1rem;
 }
