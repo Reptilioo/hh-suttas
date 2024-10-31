@@ -59,7 +59,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (document.location.search) {
           const slug = document.location.search.replace("?q=", "").replace(/\s/g, "").replace(/%20/g, "");
           buildSutta(slug, availableSuttasJson);
-      } else if (!window.location.href.endsWith("/bookmarks.html") && !window.location.href.endsWith("/glossary.html") && !window.location.href.endsWith("/comments.html")){
+      } else if (!window.location.href.endsWith("/bookmarks.html") 
+		&& !window.location.href.endsWith("/glossary.html") 
+		&& !window.location.href.endsWith("/comments.html")
+		&& !window.location.href.endsWith("/advanced-search.html")){
           displaySuttas(availableSuttasJson);
           loadWhatsNewArea(availableSuttasJson);
       }
