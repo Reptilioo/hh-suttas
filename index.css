@@ -125,14 +125,14 @@ body.dark {
 }
 
 .icon-button {
-  color: gray;
+  color: #3F3234;
   border: none;
   background: none;
   cursor: pointer;
 }
 
 .icon-button:hover {
-  color: black;
+  color: #201B1F;
 }
 
 .dark .icon-button:hover {
