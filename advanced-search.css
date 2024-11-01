@@ -1,6 +1,6 @@
 @font-face {
-  font-family: "RobotoSerif";
-  src: url("roboto-lightest.woff");
+  font-family: "RobotoSerif Bold";
+  src: url("RobotoSerif-Bold.ttf");
 }
 
 * {
@@ -142,6 +142,16 @@ h2, h3{
 
 .dark .result p{
 	color: var(--off-white);
+}
+
+b {
+    font-family: "RobotoSerif-Bold";
+    font-weight: normal;
+    color: var(--dark-orange);
+}
+
+.dark b{
+	color: var(--light-orange);
 }
 
 @media (max-width: 768px) {
