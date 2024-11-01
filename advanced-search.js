@@ -51,6 +51,7 @@ async function searchSuttas(searchTerm, options) {
       id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
       idSet = true;
       
+	  // Search in translation
 	  const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm);
       if (extractedText){
 		const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
@@ -73,20 +74,23 @@ async function searchSuttas(searchTerm, options) {
 	  }
     }
     
-    // if (options['pali']) {
-      // const suttaPl = suttasPl[i];
+    if (options['pali']) {
+      const suttaPl = suttasPl[i];
       
-      ////Title and ID of the sutta from available_suttas.json
-      // const titlePl = availableSuttasJson[suttaPl.id]?.pali_title || "Unknown Title";
-      // if (!idSet) id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
+      //Title and ID of the sutta from available_suttas.json
+      const titlePl = availableSuttasJson[suttaPl.id]?.pali_title || "Unknown Title";
+      if (!idSet) id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
       
-      ////Search in the Pali text (suttas_pl)
-      // const translationTextPl = JSON.stringify(suttaPl.root_pli_ms).toLowerCase();
-      // if (translationTextPl.includes(searchTerm)) {
-        // let snippetPl = translationTextPl.substring(translationTextPl.indexOf(searchTerm), 100);
-        // addResultToDOM(id, titlePl, snippetPl);
-      // }
-    // }
+      //Search in the Pali text (suttas_pl)
+	  const extractedText = findSearchTermPassage(suttaPl.root_pli_ms, searchTerm);
+      if (extractedText){
+		const range = findVerseRange(suttaPl.root_pli_ms, searchTerm);
+		if (range){
+			const link = "https://suttas.hillsidehermitage.org/?q=" + suttaPl.id + "#" + range;
+			addResultToDOM(id, titlePl, extractedText, link);
+		}
+	  }
+    }
   }
 }
 
@@ -159,27 +163,24 @@ function findVerseRange(translations, searchTerm) {
 // multipleVerse: allow the passage to show text from the previous/next verses
 // we want it false for comment so it only displays the content in the matching commment
 function findSearchTermPassage(translationData, searchTerm, multipleVerse = true) {
-  const lowerCaseSearchTerm = searchTerm.toLowerCase();
+  const lowerCaseSearchTerm = searchTerm.toLowerCase();  // Convert search term to lowercase
 
-  // Converts verses into a list of key-value pairs (key: verse number, value: verse text)
-  const verses = Object.entries(translationData);
+  const verses = Object.entries(translationData);        // Convert translationData to key-value pairs (key: verse number, value: verse text)
 
-  // Step 2: Search for the term in each verse individually if multipleVerse is false
   if (!multipleVerse) {
     for (let [key, verse] of verses) {
-      const lowerCaseVerse = verse.toLowerCase();
+      const lowerCaseVerse = verse.toLowerCase();        // Convert verse to lowercase
+
       const searchIndex = lowerCaseVerse.indexOf(lowerCaseSearchTerm);
 
-      // If the term is found in the current verse
       if (searchIndex !== -1) {
-        const words = verse.split(" "); // Use original text to preserve casing
+        const words = verse.split(" ");                   // Use original text to preserve casing
+
         const termWordIndex = lowerCaseVerse.slice(0, searchIndex).split(" ").length - 1;
 
-        // Calculates starting and ending indices within the verse boundaries
-        let startWordIndex = Math.max(0, termWordIndex - 50);
-        let endWordIndex = Math.min(words.length, termWordIndex + 50);
+        let startWordIndex = Math.max(0, termWordIndex - 50);  // Ensure start index is within verse boundaries
+        let endWordIndex = Math.min(words.length, termWordIndex + 50);  // Ensure end index is within verse boundaries
 
-        // Adjusts indices to have exactly 100 words without exceeding the verse
         const totalWords = endWordIndex - startWordIndex;
         if (totalWords < 100) {
           const deficit = 100 - totalWords;
@@ -190,13 +191,21 @@ function findSearchTermPassage(translationData, searchTerm, multipleVerse = true
           }
         }
 
-        // Extracts the adjusted words and reforms the text
         const adjustedWords = words.slice(startWordIndex, endWordIndex);
         let extractedText = adjustedWords.join(" ");
 
-        // Highlights the search term in the original text (case-insensitive)
-        const highlightedText = new RegExp(`\\b(${searchTerm})\\b`, "gi"); // Uses \\b for whole word match
+        const highlightedText = new RegExp(`\\b(${searchTerm})\\b`, "gi");  // Use \\b for whole word match
         extractedText = extractedText.replace(highlightedText, `<b>$1</b>`);
+
+        // Add "[...] " at the beginning if there is more text before the passage
+        if (startWordIndex > 0) {
+          extractedText = "[...] " + extractedText;
+        }
+
+        // Add "[...] " at the end if there is more text after the passage
+        if (endWordIndex < words.length) {
+          extractedText += " [...]";
+        }
 
         return extractedText;
       }
@@ -204,14 +213,13 @@ function findSearchTermPassage(translationData, searchTerm, multipleVerse = true
     return null; // If the term is not found in any verse
   }
 
-  // Multiple verse mode, concatenates all verses and performs the search
+  // Multiple verse mode, concatenate all verses and perform the search
   const concatenatedText = verses.map(([, text]) => text.toLowerCase()).join("");
   const searchIndex = concatenatedText.indexOf(lowerCaseSearchTerm);
   if (searchIndex === -1) {
     return null; // Term not found
   }
 
-  // Search around the term with a 100-word limit in the concatenated text
   const words = verses.map(([, text]) => text).join("").split(" ");
   const termWordIndex = concatenatedText.slice(0, searchIndex).split(" ").length - 1;
 
@@ -231,9 +239,18 @@ function findSearchTermPassage(translationData, searchTerm, multipleVerse = true
   const adjustedWords = words.slice(startWordIndex, startWordIndex + 100);
   let extractedText = adjustedWords.join(" ");
 
-  // Highlights the search term in the original text (case-insensitive)
-  const highlightedText = new RegExp(`\\b(${searchTerm})\\b`, "gi"); // Uses \\b for whole word match
+  const highlightedText = new RegExp(`\\b(${searchTerm})\\b`, "gi");
   extractedText = extractedText.replace(highlightedText, `<b>$1</b>`);
+
+  // Add "[...] " at the start if there is more text before the passage
+  if (startWordIndex > 0) {
+    extractedText = "[...] " + extractedText;
+  }
+
+  // Add "[...] " at the end if there is more text after the passage
+  if (endWordIndex < words.length) {
+    extractedText += " [...]";
+  }
 
   return extractedText;
 }
@@ -282,7 +299,7 @@ function addResultToDOM(id, title, snippet, link) {
   titleElement.textContent = `${id} - ${title}`;
 
   const preview = document.createElement('p');
-  preview.textContent = snippet;
+  preview.innerHTML = snippet;
 
   anchor.appendChild(titleElement);
   anchor.appendChild(preview);
