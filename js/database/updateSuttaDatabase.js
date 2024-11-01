@@ -9,9 +9,21 @@ export default function updateSuttaDatabase()
 
     if (isEmpty || isDataMissing) {
       function generateSortKey(id) {
-        return id.match(/\d+|\D+/g)
-          .map(chunk => isNaN(chunk) ? chunk : chunk.padStart(4, '0')) // Zero-padding for numeric order
+        // Assign prefix to sort in right book order
+        let prefix;
+        if (id.startsWith("dn")) prefix = "1";
+        else if (id.startsWith("mn")) prefix = "2";
+        else if (id.startsWith("sn")) prefix = "3";
+        else if (id.startsWith("an")) prefix = "4";
+        else if (id.startsWith("kn")) prefix = "5";
+        else prefix = "9";
+      
+        // Get numeric and text parts, apply padding for numeric parts
+        const paddedId = id.match(/\d+|\D+/g)
+          .map(chunk => isNaN(chunk) ? chunk : chunk.padStart(4, '0'))
           .join('');
+      
+        return prefix + paddedId;
       }
       
       fetch("../../python/generated/suttas-database-data.json")
