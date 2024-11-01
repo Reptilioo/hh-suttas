@@ -131,6 +131,7 @@ h2, h3{
 
 .result h3 {
 	font-size: 1em;
+	margin-bottom: .5rem;
 }
 
 .result p {
