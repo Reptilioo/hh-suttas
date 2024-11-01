@@ -145,13 +145,9 @@ h2, h3{
 }
 
 b {
-    font-family: "RobotoSerif-Bold";
+    font-family: "RobotoSerif Bold";
     font-weight: normal;
-    color: var(--dark-orange);
-}
-
-.dark b{
-	color: var(--light-orange);
+    color: var(--light-orange);
 }
 
 @media (max-width: 768px) {
