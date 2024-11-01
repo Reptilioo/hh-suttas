@@ -9,7 +9,9 @@ export default function updateSuttaDatabase()
 
     if (isEmpty || isDataMissing) {
       function generateSortKey(id) {
-        return id.match(/\d+|\D+/g).map(chunk => isNaN(chunk) ? chunk : Number(chunk));
+        return id.match(/\d+|\D+/g)
+          .map(chunk => isNaN(chunk) ? chunk : chunk.padStart(4, '0')) // Zero-padding for numeric order
+          .join('');
       }
       
       fetch("../../python/generated/suttas-database-data.json")
