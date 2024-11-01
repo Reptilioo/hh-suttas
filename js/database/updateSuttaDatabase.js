@@ -11,11 +11,17 @@ export default function updateSuttaDatabase()
       function generateSortKey(id) {
         // Assign prefix to sort in right book order
         let prefix;
-        if (id.startsWith("dn")) prefix = "1";
+        if (id.startsWith("dhp") //starts with KN to avoid SNP having SN prefix
+         || id.startsWith("iti") 
+         || id.startsWith("snp") 
+         || id.startsWith("thag") 
+         || id.startsWith("thig") 
+         || id.startsWith("ud")) 
+          prefix = "5";
+        else if (id.startsWith("dn")) prefix = "1";
         else if (id.startsWith("mn")) prefix = "2";
         else if (id.startsWith("sn")) prefix = "3";
         else if (id.startsWith("an")) prefix = "4";
-        else if (id.startsWith("kn")) prefix = "5";
         else prefix = "9";
       
         // Get numeric and text parts, apply padding for numeric parts
