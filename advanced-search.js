@@ -3,8 +3,6 @@
 // Gérer le cas où le searchTerm fait plus de 100 mots de longueur, il faudra afficher que le searchTerm en tant que passage
 // Ajouter un placeholder aux results et un message si rien trouvé
 // Reindenter le fichier
-// Les balises <b></b> sont pas prises en compte comme html
-// Utiliser le code existant pour renvoyer le passage pali si texte contenu dans pali. Faire une recherche sans diacritics (dans le searchTerm et dans les passages)
 // Voir si on peut optimiser le code, notamment findVerseRange() et findSearchTermPassage()
 
 import db from "./js/dexie/dexie.js";
