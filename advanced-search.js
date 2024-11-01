@@ -1,69 +1,134 @@
-//Problème d'affichage lorsqu'on cherche "cont"
-//Les passages étant sous forme de lien, on ne peut pas copier coller le texte qu'ils contiennent
-//Le texte extrait n'a pas l'air de commencer à partir du matching element
-//Faire en sorte que si le matching element apparaît plusieurs fois dans un même texte, tous les passages doivent être cités les uns à la suite des autres
+// The extracted text doesn't seem to start from the matching element
+// Ensure that if the matching element appears multiple times in the same text, all occurrences should be displayed consecutively
 
 import db from "./js/dexie/dexie.js";
-import suttasCount from './python/generated/suttas-count.js'
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
 
 const availableSuttasJson = await fetchAvailableSuttas();
 
 // Search function in the database
 async function searchSuttas(query, options) {
-    const resultsDiv = document.querySelector('.results');
-    resultsDiv.innerHTML = ''; // Clear previous results
+  query = query.toLowerCase();
+  const resultsDiv = document.querySelector('.results');
+  resultsDiv.innerHTML = ''; // Clear previous results
 
+  let suttasEn;
+  let elmtsNb = 0;
+  
+  if (options['en']) {
     // Load sorted suttas with sortKey
-    const suttas = await db.suttas_en.orderBy('sortKey').toArray();
-
-    suttas.forEach(sutta => {
-        // Convert to string to search in translation_en_anigha and comment
-        const translationText = JSON.stringify(sutta.translation_en_anigha).toLowerCase();
-        const commentText = JSON.stringify(sutta.comment).toLowerCase();
-		let inTrans = false;
-		let inComment = false;
-		
-        if (translationText.includes(query.toLowerCase())) 
-			inTrans = true;
-		
-		if (commentText.includes(query.toLowerCase()))
-			inComment = true;
-
-		if (inTrans || inComment){
-            // Get the title from the JSON file
-            const title = availableSuttasJson[sutta.id]?.title || "Unknown Title";
-            const id = availableSuttasJson[sutta.id]?.id || sutta.id.toUpperCase();
+	suttasEn = await getSuttas(db, options, 'en');
+	elmtsNb = suttasEn.length;
+  }
+  
+  let suttasPl;
+  if (options['pali']) {
+    // Load sorted suttas with sortKey
+    suttasPl = await getSuttas(db, options, 'pl');
+	if (elmtsNb < 1)
+		elmtsNb = suttasPl.length;
+  }
+  
+  // Loop through each sutta and alternate searches between English and Pali
+  for (let i = 0; i < elmtsNb; i++) {
     
-            // Test - Extract the first 100 characters of the occurrence
-            let snippet = '';
-            if (inTrans) 
-                snippet = translationText.substring(translationText.indexOf(query.toLowerCase()), 100);
-            else 
-                snippet = commentText.substring(commentText.indexOf(query.toLowerCase()), 100);
-            
+    let id;
+    let idSet = false;
+    
+    if (options['en']) {
+      const suttaEn = suttasEn[i];
+      
+      // Title and ID of the sutta from available_suttas.json
+      const titleEn = availableSuttasJson[suttaEn.id]?.title || "Unknown Title";
+      id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
+      idSet = true;
+      
+      // Search in the English text (suttas_en)
+      const translationText = JSON.stringify(suttaEn.translation_en_anigha).toLowerCase();
+      const commentText = JSON.stringify(suttaEn.comment).toLowerCase();
 
-            // Create an HTML element for each result
-            const resultDiv = document.createElement('div');
-            resultDiv.classList.add('result');
+      let inTranslation = false;
+      let inComment = false;
+      
+      if (translationText.includes(query)) inTranslation = true;
+      
+      if (commentText.includes(query)) inComment = true;
+      
+      if (inTranslation || inComment) {
+        let snippetEn = translationText.includes(query)
+          ? translationText.substring(translationText.indexOf(query), 100)
+          : commentText.substring(commentText.indexOf(query), 100);
+        addResultToDOM(id, titleEn, snippetEn);
+      }
+    }
+    
+    if (options['pali']) {
+      const suttaPl = suttasPl[i];
+      
+      // Title and ID of the sutta from available_suttas.json
+      const titlePl = availableSuttasJson[suttaPl.id]?.pali_title || "Unknown Title";
+      if (!idSet) id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
+      
+      // Search in the Pali text (suttas_pl)
+      const translationTextPl = JSON.stringify(suttaPl.root_pli_ms).toLowerCase();
+      if (translationTextPl.includes(query)) {
+        let snippetPl = translationTextPl.substring(translationTextPl.indexOf(query), 100);
+        addResultToDOM(id, titlePl, snippetPl);
+      }
+    }
+  }
+}
 
-            const link = document.createElement('a');
-            link.href = "#";
-            link.classList.add('link');
+async function getSuttas(db, options, type){
+	let query;
+	
+	if(type.includes('en'))
+		query = db.suttas_en;
+	else
+		query = db.suttas_pl;
+  
+	query = query.where("sortKey");
+	
+	//Get book ids from options object
+	let ids = [];
+	
+	if (options.dn) ids.push("1dn");
+	if (options.mn) ids.push("2mn");
+	if (options.sn) ids.push("3sn");
+	if (options.an) ids.push("4an");
+	if (options.kn) ids.push("5dhp", "5iti", "5snp", "5thag", "5thig", "5ud");
+	
+	query = query.startsWithAnyOf(ids);
+	
+	//if SN and not SNP
+	if (options['sn'] && !options['kn']){
+		const validIdRegex = /^(?!SNP)/i;
+		query = query.and(sutta => validIdRegex.test(sutta.id));
+	}
+	
+	return query.toArray();
+}
 
-            const titleElement = document.createElement('h3');
-            titleElement.textContent = `${id} - ${title}`;
+// Function to add a result to the DOM
+function addResultToDOM(id, title, snippet) {
+  const resultsDiv = document.querySelector('.results');
+  const resultDiv = document.createElement('div');
+  resultDiv.classList.add('result');
 
-            const preview = document.createElement('p');
-            preview.textContent = snippet;
+  const link = document.createElement('a');
+  link.href = "#";
+  link.classList.add('link');
 
-            // Add the HTML elements to the DOM
-            link.appendChild(titleElement);
-            link.appendChild(preview);
-            resultDiv.appendChild(link);
-            resultsDiv.appendChild(resultDiv);
-        }
-    });
+  const titleElement = document.createElement('h3');
+  titleElement.textContent = `${id} - ${title}`;
+
+  const preview = document.createElement('p');
+  preview.textContent = snippet;
+
+  link.appendChild(titleElement);
+  link.appendChild(preview);
+  resultDiv.appendChild(link);
+  resultsDiv.appendChild(resultDiv);
 }
 
 const configurationDiv = document.getElementById('configuration');
@@ -79,8 +144,8 @@ function getConfiguration() {
     return configuration;
 }
 
-document.querySelector('#search-button').addEventListener('click', () => {
-    const query = document.querySelector('#search-input').value;
+document.querySelector('#searchButton').addEventListener('click', () => {
+    const query = document.querySelector('#searchInput').value;
     const options = getConfiguration();
     searchSuttas(query, options);
 });
