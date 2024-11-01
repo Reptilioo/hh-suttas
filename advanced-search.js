@@ -1,12 +1,10 @@
-// The extracted text doesn't seem to start from the matching element
 // Ensure that if the matching element appears multiple times in the same text, all occurrences should be displayed consecutively
 // Pourrait être encore plus précis au niveau du nombre de mots qu'il renvoit si on ajoutait les autres symboles de ponctuation pour séparer les mots
 // Gérer le cas où le searchTerm fait plus de 100 mots de longueur, il faudra afficher que le searchTerm en tant que passage
 // Ajouter un placeholder aux results et un message si rien trouvé
 // Reindenter le fichier
 // Les balises <b></b> sont pas prises en compte comme html
-// Renvoyer commentaire si texte contenu dans commentaire
-// Utiliser le code existant pour renvoyer le passage pali si texte contenu dans pali
+// Utiliser le code existant pour renvoyer le passage pali si texte contenu dans pali. Faire une recherche sans diacritics (dans le searchTerm et dans les passages)
 // Voir si on peut optimiser le code, notamment findVerseRange() et findSearchTermPassage()
 
 import db from "./js/dexie/dexie.js";
@@ -37,9 +35,8 @@ async function searchSuttas(searchTerm, options) {
 		elmtsNb = suttasPl.length;
   }
   
-  // Loop through each sutta and alternate searches between English and Pali
   for (let i = 0; i < elmtsNb; i++) {
-    
+	  
     let id;
     let idSet = false;
     
@@ -54,27 +51,26 @@ async function searchSuttas(searchTerm, options) {
       id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
       idSet = true;
       
-      // Search in the comments
-      const commentText = JSON.stringify(suttaEn.comment).toLowerCase();
-      let inComment = false;
-      if (commentText.includes(searchTerm)) inComment = true;
-      
 	  const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm);
       if (extractedText){
 		const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
 		if (range){
 			const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#" + range;
-			console.log(link);
 			addResultToDOM(id, titleEn, extractedText, link);
 		}
 	  }
 	  
-	  // if (inComment) {
-        // let snippetEn = translationText.includes(searchTerm)
-          // ? translationText.substring(translationText.indexOf(searchTerm), 100)
-          // : commentText.substring(commentText.indexOf(searchTerm), 100);
-        // addResultToDOM(id, titleEn, snippetEn, link);
-      // }
+	  // Search in comment
+	  if (suttaEn.comment){
+		  const extractedText = findSearchTermPassage(suttaEn.comment, searchTerm, false);
+		  if (extractedText){
+			const commentNb = findCommentNb(suttaEn.comment, searchTerm);
+			if (commentNb){
+				const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#comment" + commentNb;
+				addResultToDOM(id, titleEn + " - Comments", extractedText, link);
+			}
+		  }
+	  }
     }
     
     // if (options['pali']) {
@@ -93,6 +89,26 @@ async function searchSuttas(searchTerm, options) {
     // }
   }
 }
+
+function findCommentNb(commentData, searchTerm) {
+    const result = [];
+    let line = 1;
+
+    for (const [key, value] of Object.entries(commentData)) {
+        if (value === "") {
+            continue;  // Ignore empty lines
+        }
+
+        if (value.includes(searchTerm)) {
+            result.push(line);
+        }
+
+        line++;
+    }
+
+    return result;
+}
+
 
 function findVerseRange(translations, searchTerm) {
   let verseKeys = Object.keys(translations);
@@ -139,48 +155,85 @@ function findVerseRange(translations, searchTerm) {
   return `${startVerse}-${endVerse}`;
 }
 
-function findSearchTermPassage(translationData, searchTerm) {
-  // Step 1: Concatenates all verse values into lowercase without spaces between verses
-  const verses = Object.entries(translationData);
-  const concatenatedText = verses.map(([, text]) => text).join("").toLowerCase();
 
-  // Also converts the searchTerm to lowercase for case-insensitive search
+// multipleVerse: allow the passage to show text from the previous/next verses
+// we want it false for comment so it only displays the content in the matching commment
+function findSearchTermPassage(translationData, searchTerm, multipleVerse = true) {
   const lowerCaseSearchTerm = searchTerm.toLowerCase();
 
-  // Step 2: Finds the index of the search term in the concatenated text
+  // Converts verses into a list of key-value pairs (key: verse number, value: verse text)
+  const verses = Object.entries(translationData);
+
+  // Step 2: Search for the term in each verse individually if multipleVerse is false
+  if (!multipleVerse) {
+    for (let [key, verse] of verses) {
+      const lowerCaseVerse = verse.toLowerCase();
+      const searchIndex = lowerCaseVerse.indexOf(lowerCaseSearchTerm);
+
+      // If the term is found in the current verse
+      if (searchIndex !== -1) {
+        const words = verse.split(" "); // Use original text to preserve casing
+        const termWordIndex = lowerCaseVerse.slice(0, searchIndex).split(" ").length - 1;
+
+        // Calculates starting and ending indices within the verse boundaries
+        let startWordIndex = Math.max(0, termWordIndex - 50);
+        let endWordIndex = Math.min(words.length, termWordIndex + 50);
+
+        // Adjusts indices to have exactly 100 words without exceeding the verse
+        const totalWords = endWordIndex - startWordIndex;
+        if (totalWords < 100) {
+          const deficit = 100 - totalWords;
+          if (startWordIndex > 0) {
+            startWordIndex = Math.max(0, startWordIndex - deficit);
+          } else {
+            endWordIndex = Math.min(words.length, endWordIndex + deficit);
+          }
+        }
+
+        // Extracts the adjusted words and reforms the text
+        const adjustedWords = words.slice(startWordIndex, endWordIndex);
+        let extractedText = adjustedWords.join(" ");
+
+        // Highlights the search term in the original text (case-insensitive)
+        const highlightedText = new RegExp(`\\b(${searchTerm})\\b`, "gi"); // Uses \\b for whole word match
+        extractedText = extractedText.replace(highlightedText, `<b>$1</b>`);
+
+        return extractedText;
+      }
+    }
+    return null; // If the term is not found in any verse
+  }
+
+  // Multiple verse mode, concatenates all verses and performs the search
+  const concatenatedText = verses.map(([, text]) => text.toLowerCase()).join("");
   const searchIndex = concatenatedText.indexOf(lowerCaseSearchTerm);
   if (searchIndex === -1) {
     return null; // Term not found
   }
 
-  // Step 3: Builds a passage of 100 words around the search term
-  const words = concatenatedText.split(" ");
+  // Search around the term with a 100-word limit in the concatenated text
+  const words = verses.map(([, text]) => text).join("").split(" ");
   const termWordIndex = concatenatedText.slice(0, searchIndex).split(" ").length - 1;
 
-  // Determines the starting and ending indices for 100 words
   let startWordIndex = Math.max(0, termWordIndex - 50);
   let endWordIndex = Math.min(words.length, termWordIndex + 50);
 
-  // Adjusts the indices to ensure there are 100 words
   const totalWords = endWordIndex - startWordIndex;
   if (totalWords < 100) {
     const deficit = 100 - totalWords;
     if (startWordIndex > 0) {
-      // If we have a deficit, try to increase the beginning
       startWordIndex = Math.max(0, startWordIndex - deficit);
     } else {
-      // If we can't go further at the beginning, adjust the end
       endWordIndex = Math.min(words.length, endWordIndex + deficit);
     }
   }
 
-  // Ensures the passage is exactly 100 words
   const adjustedWords = words.slice(startWordIndex, startWordIndex + 100);
   let extractedText = adjustedWords.join(" ");
 
-  // Step 4: Surrounds the search term with <b></b> tags
-  const highlightedText = new RegExp(`(${lowerCaseSearchTerm})`, "gi");
-  extractedText = extractedText.replace(highlightedText, `<b>${searchTerm}</b>`);
+  // Highlights the search term in the original text (case-insensitive)
+  const highlightedText = new RegExp(`\\b(${searchTerm})\\b`, "gi"); // Uses \\b for whole word match
+  extractedText = extractedText.replace(highlightedText, `<b>$1</b>`);
 
   return extractedText;
 }
