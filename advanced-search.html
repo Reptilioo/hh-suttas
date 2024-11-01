@@ -79,21 +79,21 @@
 		</div>
 	</div>
 	
-	<div id="search-container">
-		<div id="option-panel">
+	<div id="searchContainer">
+		<div id="optionPanel">
 			<h2>Search Options</h2>
 			<div class="search-field">
-				<input type="text" placeholder="Search term">
-				<button class="search-btn">Search</button>
+				<input id="searchInput" type="text" placeholder="Search term">
+				<button id="searchButton" class="search-btn">Search</button>
 			</div>
 			
 			<div id="configuration">
-				<div id="lang-option" class="options">
+				<div id="langOption" class="options">
 					<h3>Language</h3>
 					<label><input type="checkbox" name="lang" value="en"> English</label>
 					<label><input type="checkbox" name="lang" value="pali"> Pali</label>
 				</div>
-				<div id="book-option" class="options">
+				<div id="bookOption" class="options">
 					<h3>Books</h3>
 					<label><input type="checkbox" name="book" value="an"> AN</label>
 					<label><input type="checkbox" name="book" value="dn"> DN</label>
@@ -137,5 +137,6 @@
 		</div>
 	</div>
 	<script type="module" src="index.js"></script>
+	<script type="module" src="advanced-search.js"></script>
 </body>
 </html>
