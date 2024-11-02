@@ -5,15 +5,13 @@
 // Re-indent the file
 // See if we can optimize the code, particularly the findVerseRange() and findSearchTermPassage() functions
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
-// Add loading bar
-// If we search a very common term like "e", it looks like all the results appear together after the search is done, rather than appearing gradually 
+// Add loading bar 
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
 
 const availableSuttasJson = await fetchAvailableSuttas();
 
-// Search function in the database
 async function searchSuttas(searchTerm, options) {
   searchTerm = searchTerm.toLowerCase();
   const resultsDiv = document.querySelector('.results');
@@ -21,87 +19,78 @@ async function searchSuttas(searchTerm, options) {
 
   let suttasEn;
   let elmtsNb = 0;
-  
+
   if (options['en']) {
-    // Load sorted suttas with sortKey
-	suttasEn = await getSuttas(db, options, 'en');
-	elmtsNb = suttasEn.length;
+    suttasEn = await getSuttas(db, options, 'en');
+    elmtsNb = suttasEn.length;
   }
-  
+
   let suttasPl;
   if (options['pali']) {
-    // Load sorted suttas with sortKey
     suttasPl = await getSuttas(db, options, 'pl');
-	if (elmtsNb < 1)
-		elmtsNb = suttasPl.length;
+    if (elmtsNb < 1) {
+      elmtsNb = suttasPl.length;
+    }
   }
-  
+
   let gotResults = false;
-  
+
   for (let i = 0; i < elmtsNb; i++) {
-	  
     let id;
     let idSet = false;
-    
+
     if (options['en']) {
       const suttaEn = suttasEn[i];
-      
-      // Title and ID of the sutta from available_suttas.json
       let titleEn = availableSuttasJson[suttaEn.id]?.title || "Unknown Title";
-	  const heading = availableSuttasJson[suttaEn.id]?.heading || null;
-	  if (heading) titleEn = `${titleEn} (${heading})`
-	  
+      const heading = availableSuttasJson[suttaEn.id]?.heading || null;
+      if (heading) titleEn = `${titleEn} (${heading})`
+
       id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
       idSet = true;
-      
-	  // Search in translation
-	  const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
-      if (extractedText){
-		const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
-		if (range){
-			const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#" + range;
-			addResultToDOM(id, titleEn, curateText(extractedText), link);
-			gotResults = true;
-		}
-	  }
-	  
-	  // Search in comment
-	  if (suttaEn.comment){
-		  const extractedText = findSearchTermPassage(suttaEn.comment, searchTerm, false, options['strict']);
-		  if (extractedText){
-			const commentNb = findCommentNb(suttaEn.comment, searchTerm);
-			if (commentNb){
-				const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#comment" + commentNb;
-				addResultToDOM(id, titleEn + " - Comments", curateText(extractedText), link);
-				gotResults = true;
-			}
-		  }
-	  }
+
+      const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
+      if (extractedText) {
+        const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
+        if (range) {
+          const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#" + range;
+          await addResultToDOMAsync(id, titleEn, curateText(extractedText), link);
+          gotResults = true;
+        }
+      }
+
+      if (suttaEn.comment) {
+        const extractedText = findSearchTermPassage(suttaEn.comment, searchTerm, false, options['strict']);
+        if (extractedText) {
+          const commentNb = findCommentNb(suttaEn.comment, searchTerm);
+          if (commentNb) {
+            const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#comment" + commentNb;
+            await addResultToDOMAsync(id, titleEn + " - Comments", curateText(extractedText), link);
+            gotResults = true;
+          }
+        }
+      }
     }
-    
+
     if (options['pali']) {
       const suttaPl = suttasPl[i];
-      
-      //Title and ID of the sutta from available_suttas.json
       const titlePl = availableSuttasJson[suttaPl.id]?.pali_title || "Unknown Title";
       if (!idSet) id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
-      
-      //Search in the Pali text (suttas_pl)
-	  const extractedText = findSearchTermPassage(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true);
-      if (extractedText){
-		const range = findVerseRange(suttaPl.root_pli_ms, searchTerm, true);
-		if (range){
-			const link = "https://suttas.hillsidehermitage.org/?q=" + suttaPl.id + "#" + range;
-			addResultToDOM(id, titlePl, curateText(extractedText), link);
-			gotResults = true;
-		}
-	  }
+
+      const extractedText = findSearchTermPassage(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true);
+      if (extractedText) {
+        const range = findVerseRange(suttaPl.root_pli_ms, searchTerm, true);
+        if (range) {
+          const link = "https://suttas.hillsidehermitage.org/?q=" + suttaPl.id + "#" + range;
+          await addResultToDOMAsync(id, titlePl, curateText(extractedText), link);
+          gotResults = true;
+        }
+      }
     }
   }
-  
-  // Display no results found
-  if (!gotResults)
-	  addResultToDOM("", "No results found", "No results were found with the expression '" + searchTerm + "'.", "none");
+
+  if (!gotResults) {
+    addResultToDOM("", "No results found", "No results were found with the expression '" + searchTerm + "'.", "none");
+  }
 }
 
 function findCommentNb(commentData, searchTerm) {
@@ -341,6 +330,15 @@ async function getSuttas(db, options, type){
 	}
 	
 	return query.toArray();
+}
+
+function addResultToDOMAsync(id, title, snippet, link) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            addResultToDOM(id, title, snippet, link);
+            resolve();
+        }, 0);
+    });
 }
 
 // Function to add a result to the DOM
