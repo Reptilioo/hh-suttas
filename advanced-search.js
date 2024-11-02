@@ -7,7 +7,6 @@
 // Add loading bar 
 // Having a stop search button next to the loading bar
 // After X results, having a button next to stop button to load more?
-// When searching two times rapidly, I think the results aren't the same because some results of the first search were added after the results of the first search were cleaned
 // Find a better way to get the comment link??
 
 import db from "./js/dexie/dexie.js";
@@ -434,27 +433,27 @@ function getConfiguration() {
     return configuration;
 }
 
-function startSearch(){
-	const query = document.querySelector('#searchInput').value;
-    const options = getConfiguration();
-    searchSuttas(query, options);
-}
+let isSearching = false;
 
+async function startSearch() {
+    if (isSearching) return; // Prevent multiple simultaneous searches
+    isSearching = true; // Set the search flag
+    const searchButton = document.querySelector('#searchButton');
+    searchButton.disabled = true; // Disable the button
+
+    const query = document.querySelector('#searchInput').value;
+    const options = getConfiguration();
+    await searchSuttas(query, options); // Await the search to complete
+
+    searchButton.disabled = false; // Re-enable the button
+    isSearching = false; // Reset the flag
+}
 
 document.querySelector('#searchButton').addEventListener('click', () => {
     startSearch();
 });
 
 const searchInput = document.getElementById('searchInput');
-
-// Enter key works on the entire page and not just when focused on the search box, so we can just change an option and restart the search without having to click in the search box
-document.addEventListener('keydown', function(event) {
-  if (event.key === 'Enter') {
-    startSearch();
-  }
-});
-
-window.onload = () => searchInput.focus();
 
 // Deactivate button if either search bar empty, no language selected or no books selected
 window.addEventListener("load", function() {
@@ -486,4 +485,17 @@ window.addEventListener("load", function() {
 
   // Initial call to configure the button based on the current state of the inputs
   checkInputs();
+  
+  // Enter key works on the entire page and not just when focused on the search box, so we can just change an option and restart the search without having to click in the search box
+  document.addEventListener('keydown', function(event) {
+	if (event.key === 'Enter') {
+		// Empêche de lancer la recherche si le bouton est désactivé
+		if (!searchButton.disabled) {
+			startSearch(); // Appelle la fonction pour démarrer la recherche
+		}
+		event.preventDefault(); // Empêche le comportement par défaut
+	}
+  });	
 });
+
+window.onload = () => searchInput.focus();
