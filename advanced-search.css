@@ -97,7 +97,12 @@ h2, h3{
 	border: 2px solid #BBB;
 }
 
-.search-btn:hover {
+.search-btn:disabled{
+	background-color: #AAA;
+	cursor: not-allowed;
+}
+
+.search-btn:enabled:hover {
 	background-color: var(--darker-brown);
 }
 
