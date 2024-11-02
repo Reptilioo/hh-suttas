@@ -116,6 +116,10 @@ h2, h3{
 	width: 100%;
 }
 
+.result.placeholder h1{
+	font-size: 1.2rem;
+}
+
 .dark .result {
     background-color: var(--dark-brown);
 }
