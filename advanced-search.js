@@ -440,6 +440,7 @@ function startSearch(){
     searchSuttas(query, options);
 }
 
+
 document.querySelector('#searchButton').addEventListener('click', () => {
     startSearch();
 });
@@ -454,3 +455,35 @@ document.addEventListener('keydown', function(event) {
 });
 
 window.onload = () => searchInput.focus();
+
+// Deactivate button if either search bar empty, no language selected or no books selected
+window.addEventListener("load", function() {
+  const searchInput = document.getElementById("searchInput");
+  const searchButton = document.getElementById("searchButton");
+  // Select the language input elements
+  const langInputs = Array.from(document.querySelectorAll('input[name="lang"]'));
+  // Select the book category input elements
+  const categoryInputs = Array.from(document.querySelectorAll('input[name="book"]'));
+
+  function checkInputs() {
+	// Checks if #searchInput is not empty
+	const isSearchInputNotEmpty = searchInput.value.trim() !== '';
+    // Checks if at least one language input is checked
+    const isLangChecked = langInputs.some(input => input.checked);
+    // Checks if at least one category input is checked
+    const isCategoryChecked = categoryInputs.some(input => input.checked);
+
+    // Enables or disables the search button based on the checked inputs
+    searchButton.disabled = !(isSearchInputNotEmpty && isLangChecked && isCategoryChecked);
+  }
+
+  // Adds event listeners to each input to check the state on every change
+  [...langInputs, ...categoryInputs].forEach(input => {
+    input.addEventListener("change", checkInputs);
+  });
+  
+  searchInput.addEventListener("input", checkInputs);
+
+  // Initial call to configure the button based on the current state of the inputs
+  checkInputs();
+});
