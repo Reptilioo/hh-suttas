@@ -2,11 +2,13 @@
 // Could be even more accurate in terms of the number of words it returns if we added other punctuation symbols to separate words
 // Re-indent the file
 // See if we can optimize the code, particularly the findVerseRange() and findSearchTermPassage() functions
+// Cut in smaller functions?
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
 // Add loading bar 
-// Cut in smaller functions
-// Bug: when searching in english with strict option for "sati" -> mn10 comment gets returned when it shouldn't, also when clicking it the comment link is broken (findCommentNb doesn't return the right comment)
-// Bug: when searching in english with strict option for "sati" -> AN 3.101 comment is only 75 words long
+// Having a stop search button next to the loading bar
+// After X results, having a button next to stop button to load more?
+// When searching two times rapidly, I think the results aren't the same because some results of the first search were added after the results of the first search were cleaned
+// Find a better way to get the comment link??
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
@@ -14,7 +16,7 @@ import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSutta
 const availableSuttasJson = await fetchAvailableSuttas();
 
 async function searchSuttas(searchTerm, options) {
-  searchTerm = cleanText(searchTerm.toLowerCase());
+  searchTerm = cleanSearchTerm(searchTerm.toLowerCase());
   
   const resultsDiv = document.querySelector('.results');
   resultsDiv.innerHTML = ''; // Clear previous results
@@ -63,7 +65,7 @@ async function searchSuttas(searchTerm, options) {
       if (suttaEn.comment) {
         const extractedText = findSearchTermPassage(suttaEn.comment, searchTerm, false, options['strict']);
         if (extractedText) {
-          const commentNb = findCommentNb(suttaEn.comment, searchTerm);
+          const commentNb = findCommentNb(suttaEn.comment, extractedText);
           if (commentNb) {
             const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#comment" + commentNb;
             await addResultToDOMAsync(id, titleEn + " - Comments", extractedText, link);
@@ -95,27 +97,34 @@ async function searchSuttas(searchTerm, options) {
   }
 }
 
-function findCommentNb(commentData, searchTerm) {
+// Search extractedText (without the added <b></b> and [...]) in each comments to find the position of the matching comment
+function findCommentNb(commentData, extractedText) {
+	extractedText = extractedText.replace(/<b>/g, "").replace(/<\/b>/g, "") //replace "<b>" and "</b>"
+					.replace(/ \[\.\.\.\]/g, "").replace(/\[\.\.\.\] /g, ""); //replace "[...] " and " [...]"
+					
     const result = [];
     let line = 1;
 
-    for (const [key, value] of Object.entries(commentData)) {
+    for (let [key, value] of Object.entries(commentData)) {
         if (value === "") {
             continue;  // Ignore empty lines
         }
+		
+		value = curateText(value);
 
-        if (value.toLowerCase().includes(searchTerm.toLowerCase())) {
+        if (value.toLowerCase().includes(extractedText.toLowerCase())) {
             result.push(line);
         }
 
         line++;
     }
-
+	
+	if (result.length < 1) return null;
     return result;
 }
 
 // Makes sure that the sentence has the correct format and fits on one line only
-function cleanText(inputText) {
+function cleanSearchTerm(inputText) {
     // Remove line breaks and extra spaces
     let cleanedText = inputText
         .replace(/\n/g, ' ') // Replace line breaks with spaces
@@ -205,20 +214,20 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
   
   const lowerCaseSearchTerm = searchTerm.toLowerCase();
   const searchTermRegex = strict 
-    ? new RegExp(`\\b${lowerCaseSearchTerm}\\b`, "gi") 
+    ? new RegExp(`(^|\\s|[.,!?\\(\\)]|\\b)(${lowerCaseSearchTerm})(?=\\s|[.,!?\\(\\)]|$)`, "gi") 
     : new RegExp(`(${lowerCaseSearchTerm})`, "gi");
 
   const verses = Object.entries(textData).map(([key, verse]) => [key, curateText(verse)]);
 
   if (!multipleVerse) {
     for (let [index, [key, verse]] of verses.entries()) {
+		
       const lowerCaseVerse = pali ? removeDiacritics(verse.toLowerCase()) : verse.toLowerCase();
       const searchIndex = lowerCaseVerse.search(searchTermRegex);
       
       if (searchIndex !== -1) {
         const words = pali ? removeDiacritics(verse).split(" ") : verse.split(" ");
         const termWordIndex = lowerCaseVerse.slice(0, searchIndex).split(" ").length - 1;
-
         const searchTermLengthInWords = lowerCaseSearchTerm.split(" ").length;
 
         if (searchTermLengthInWords > maxWords) {
@@ -232,17 +241,15 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
           return extractedText;
         }
 
-        let startWordIndex = Math.max(0, termWordIndex - (maxWords - searchTermLengthInWords) / 2);
-        let endWordIndex = Math.min(words.length, termWordIndex + searchTermLengthInWords + (maxWords - searchTermLengthInWords) / 2);
+        let startWordIndex = Math.max(0, termWordIndex - Math.floor((maxWords - searchTermLengthInWords) / 2));
+        let endWordIndex = Math.min(words.length, termWordIndex + searchTermLengthInWords + Math.ceil((maxWords - searchTermLengthInWords) / 2));
 
-        startWordIndex = Math.max(0, startWordIndex);
-        endWordIndex = Math.min(words.length, endWordIndex);
-
-        while (endWordIndex - startWordIndex > maxWords) {
-          if (startWordIndex > 0) {
-            startWordIndex++;
-          } else {
-            endWordIndex++;
+        // Adjust if we reach the beginning or end of the verse and not enough words are gathered
+        if (endWordIndex - startWordIndex < maxWords) {
+          if (startWordIndex === 0) {
+            endWordIndex = Math.min(words.length, startWordIndex + maxWords);
+          } else if (endWordIndex === words.length) {
+            startWordIndex = Math.max(0, endWordIndex - maxWords);
           }
         }
 
@@ -250,9 +257,12 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
         let extractedText = adjustedWords.join(" ");
 
         const highlightRegex = strict 
-          ? new RegExp(`(?<!\\S)${lowerCaseSearchTerm}(?!\\S)`, "gi") 
+          ? new RegExp(`(^|\\s|[.,!?\\(\\)]|\\b)(${lowerCaseSearchTerm})(?=\\s|[.,!?\\(\\)]|$)`, "gi") 
           : new RegExp(`(${lowerCaseSearchTerm})`, "gi");
-        extractedText = extractedText.replace(highlightRegex, `<b>$&</b>`);
+		  
+        extractedText = strict
+          ? extractedText.replace(highlightRegex, `$1<b>$2</b>`)
+          : extractedText.replace(highlightRegex, `<b>$1</b>`); 
 
         if (startWordIndex > 0) {
           extractedText = "[...] " + extractedText;
@@ -290,17 +300,14 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
   const allWords = verses.map(([, text]) => (pali ? removeDiacritics(text) : text)).join("").split(" ");
   const termWordIndex = concatenatedText.slice(0, searchIndex).split(" ").length - 1;
 
-  let startWordIndex = Math.max(0, termWordIndex - (maxWords - searchTermLengthInWords) / 2);
-  let endWordIndex = Math.min(allWords.length, termWordIndex + searchTermLengthInWords + (maxWords - searchTermLengthInWords) / 2);
+  let startWordIndex = Math.max(0, termWordIndex - Math.floor((maxWords - searchTermLengthInWords) / 2));
+  let endWordIndex = Math.min(allWords.length, termWordIndex + searchTermLengthInWords + Math.ceil((maxWords - searchTermLengthInWords) / 2));
 
-  startWordIndex = Math.max(0, startWordIndex);
-  endWordIndex = Math.min(allWords.length, endWordIndex);
-
-  while (endWordIndex - startWordIndex > maxWords) {
-    if (startWordIndex > 0) {
-      startWordIndex++;
-    } else {
-      endWordIndex++;
+  if (endWordIndex - startWordIndex < maxWords) {
+    if (startWordIndex === 0) {
+      endWordIndex = Math.min(allWords.length, startWordIndex + maxWords);
+    } else if (endWordIndex === allWords.length) {
+      startWordIndex = Math.max(0, endWordIndex - maxWords);
     }
   }
 
@@ -308,9 +315,12 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
   let extractedText = adjustedWords.join(" ");
 
   const highlightRegex = strict 
-    ? new RegExp(`(?<!\\S)${lowerCaseSearchTerm}(?!\\S)`, "gi") 
+    ? new RegExp(`(^|\\s|[.,!?\\(\\)]|\\b)(${lowerCaseSearchTerm})(?=\\s|[.,!?\\(\\)]|$)`, "gi") 
     : new RegExp(`(${lowerCaseSearchTerm})`, "gi");
-  extractedText = extractedText.replace(highlightRegex, `<b>$&</b>`);
+	
+  extractedText = strict
+    ? extractedText.replace(highlightRegex, `$1<b>$2</b>`)
+    : extractedText.replace(highlightRegex, `<b>$1</b>`); 
   
   if (startWordIndex > 0) {
     extractedText = "[...] " + extractedText;
@@ -330,7 +340,7 @@ function curateText(text) {
 
 	// Replace hyperlink [link_text](url) with only link_text
     text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
-
+  
 	// Replace words or expressions surrounded by _ or * with only text, otherwise can cause issue with highlighting
     text = text.replace(/[_*]([^_*]+)[_*]/g, "$1");
 
