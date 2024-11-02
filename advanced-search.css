@@ -50,6 +50,11 @@ h2, h3{
 	flex-direction: column;
 }
 
+#configuration label,
+#configuration input {
+    cursor: pointer;
+}
+
 .search-field input{
 	width: 100%; 
 	padding: 8px; 
