@@ -1,9 +1,10 @@
 // Ensure that if the matching element appears multiple times in the same text, all occurrences should be displayed consecutively
-// Pourrait être encore plus précis au niveau du nombre de mots qu'il renvoit si on ajoutait les autres symboles de ponctuation pour séparer les mots
-// Gérer le cas où le searchTerm fait plus de 100 mots de longueur, il faudra afficher que le searchTerm en tant que passage
-// Ajouter un placeholder aux results et un message si rien trouvé
-// Reindenter le fichier
-// Voir si on peut optimiser le code, notamment findVerseRange() et findSearchTermPassage()
+// Could be even more accurate in terms of the number of words it returns if we added other punctuation symbols to separate words
+// Handle the case where the search term is over 100 words long, we should display only the search term as a passage
+// Add a placeholder to the results and a message if nothing is found
+// Re-indent the file
+// See if we can optimize the code, particularly the findVerseRange() and findSearchTermPassage() functions
+// Replace <br><br> or <br/><br/> or any other variants with a single <br> (we find this in comments, for example)
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
@@ -50,7 +51,7 @@ async function searchSuttas(searchTerm, options) {
       idSet = true;
       
 	  // Search in translation
-	  const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm);
+	  const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
       if (extractedText){
 		const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
 		if (range){
@@ -61,7 +62,7 @@ async function searchSuttas(searchTerm, options) {
 	  
 	  // Search in comment
 	  if (suttaEn.comment){
-		  const extractedText = findSearchTermPassage(suttaEn.comment, searchTerm, false);
+		  const extractedText = findSearchTermPassage(suttaEn.comment, searchTerm, false, options['strict']);
 		  if (extractedText){
 			const commentNb = findCommentNb(suttaEn.comment, searchTerm);
 			if (commentNb){
@@ -80,7 +81,7 @@ async function searchSuttas(searchTerm, options) {
       if (!idSet) id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
       
       //Search in the Pali text (suttas_pl)
-	  const extractedText = findSearchTermPassage(suttaPl.root_pli_ms, searchTerm);
+	  const extractedText = findSearchTermPassage(suttaPl.root_pli_ms, searchTerm, true, options['strict']);
       if (extractedText){
 		const range = findVerseRange(suttaPl.root_pli_ms, searchTerm);
 		if (range){
@@ -158,27 +159,31 @@ function findVerseRange(translations, searchTerm) {
 }
 
 
-// multipleVerse: allow the passage to show text from the previous/next verses
-// we want it false for comment so it only displays the content in the matching commment
-function findSearchTermPassage(translationData, searchTerm, multipleVerse = true) {
-  const lowerCaseSearchTerm = searchTerm.toLowerCase();  // Convert search term to lowercase
+// multipleVerse: allow the passage to show text from the previous/next verses. We want it false for comment so it only displays the content in the matching commment.
+// strict: allow to return only perfect matching results (e.g. not when "restraining" matches with searchTerm "training")
+function findSearchTermPassage(translationData, searchTerm, multipleVerse = true, strict = false) {
+  const lowerCaseSearchTerm = searchTerm.toLowerCase();
+  const searchTermRegex = strict ? new RegExp(`\\b${lowerCaseSearchTerm}\\b`, "gi") : new RegExp(`(${lowerCaseSearchTerm})`, "gi");
 
-  const verses = Object.entries(translationData);        // Convert translationData to key-value pairs (key: verse number, value: verse text)
+  // Convert translation data into a list of [key, text] entries
+  const verses = Object.entries(translationData);
 
+  // Step 2: Search for the term in each individual verse if multipleVerse is false
   if (!multipleVerse) {
-    for (let [key, verse] of verses) {
-      const lowerCaseVerse = verse.toLowerCase();        // Convert verse to lowercase
-
-      const searchIndex = lowerCaseVerse.indexOf(lowerCaseSearchTerm);
-
+    for (let [index, [key, verse]] of verses.entries()) {
+      const lowerCaseVerse = verse.toLowerCase();
+      const searchIndex = lowerCaseVerse.search(searchTermRegex);
+      
+      // If the term is found in the current verse
       if (searchIndex !== -1) {
-        const words = verse.split(" ");                   // Use original text to preserve casing
-
+        const words = verse.split(" "); // Original text to preserve casing
         const termWordIndex = lowerCaseVerse.slice(0, searchIndex).split(" ").length - 1;
 
-        let startWordIndex = Math.max(0, termWordIndex - 50);  // Ensure start index is within verse boundaries
-        let endWordIndex = Math.min(words.length, termWordIndex + 50);  // Ensure end index is within verse boundaries
+        // Calculate start and end indices within the verse boundaries
+        let startWordIndex = Math.max(0, termWordIndex - 50);
+        let endWordIndex = Math.min(words.length, termWordIndex + 50);
 
+        // Adjust indices to have exactly 100 words without exceeding the verse
         const totalWords = endWordIndex - startWordIndex;
         if (totalWords < 100) {
           const deficit = 100 - totalWords;
@@ -189,20 +194,21 @@ function findSearchTermPassage(translationData, searchTerm, multipleVerse = true
           }
         }
 
+        // Extract adjusted words and re-form the text
         const adjustedWords = words.slice(startWordIndex, endWordIndex);
         let extractedText = adjustedWords.join(" ");
 
-        const highlightedText = new RegExp(`\\b(${searchTerm})\\b`, "gi");  // Use \\b for whole word match
-        extractedText = extractedText.replace(highlightedText, `<b>$1</b>`);
+        // Highlight the searched term using the original text
+        const highlightRegex = strict ? new RegExp(`\\b${searchTerm}\\b`, "gi") : new RegExp(`(${searchTerm})`, "gi");
+        extractedText = extractedText.replace(highlightRegex, `<b>$&</b>`);
 
-        // Add "[...] " at the beginning if there is more text before the passage
-        if (startWordIndex > 0) {
+        // Add "[...] " if the passage does not start at the beginning of the first key-value pair
+        if (index > 0 || startWordIndex > 0) {
           extractedText = "[...] " + extractedText;
         }
-
-        // Add "[...] " at the end if there is more text after the passage
-        if (endWordIndex < words.length) {
-          extractedText += " [...]";
+        // Add " [...]" if the passage does not end at the end of the last key-value pair
+        if (index < verses.length - 1 || endWordIndex < words.length) {
+          extractedText = extractedText + " [...]";
         }
 
         return extractedText;
@@ -211,13 +217,14 @@ function findSearchTermPassage(translationData, searchTerm, multipleVerse = true
     return null; // If the term is not found in any verse
   }
 
-  // Multiple verse mode, concatenate all verses and perform the search
+  // MultipleVerse mode, concatenate all verses and perform the search
   const concatenatedText = verses.map(([, text]) => text.toLowerCase()).join("");
-  const searchIndex = concatenatedText.indexOf(lowerCaseSearchTerm);
+  const searchIndex = concatenatedText.search(searchTermRegex);
   if (searchIndex === -1) {
     return null; // Term not found
   }
 
+  // Search around the term with a limit of 100 words in the concatenated text
   const words = verses.map(([, text]) => text).join("").split(" ");
   const termWordIndex = concatenatedText.slice(0, searchIndex).split(" ").length - 1;
 
@@ -237,17 +244,17 @@ function findSearchTermPassage(translationData, searchTerm, multipleVerse = true
   const adjustedWords = words.slice(startWordIndex, startWordIndex + 100);
   let extractedText = adjustedWords.join(" ");
 
-  const highlightedText = new RegExp(`\\b(${searchTerm})\\b`, "gi");
-  extractedText = extractedText.replace(highlightedText, `<b>$1</b>`);
+  // Highlight the searched term in the original text
+  const highlightRegex = strict ? new RegExp(`\\b${searchTerm}\\b`, "gi") : new RegExp(`(${searchTerm})`, "gi");
+  extractedText = extractedText.replace(highlightRegex, `<b>$&</b>`);
 
-  // Add "[...] " at the start if there is more text before the passage
+  // Add "[...] " at the beginning if the passage does not start at the beginning of the first key-value pair
   if (startWordIndex > 0) {
     extractedText = "[...] " + extractedText;
   }
-
-  // Add "[...] " at the end if there is more text after the passage
+  // Add " [...]" at the end if the passage does not end at the end of the last key-value pair
   if (endWordIndex < words.length) {
-    extractedText += " [...]";
+    extractedText = extractedText + " [...]";
   }
 
   return extractedText;
