@@ -116,10 +116,6 @@ h2, h3{
 	width: 100%;
 }
 
-.result.placeholder p{
-	margin-top:1rem;
-}
-
 .dark .result {
     background-color: var(--dark-brown);
 }
