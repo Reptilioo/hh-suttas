@@ -6,6 +6,7 @@
 // Add loading bar 
 // Cut in smaller functions
 // Bug: when searching in english with strict option for "sati" -> mn10 comment gets returned when it shouldn't, also when clicking it the comment link is broken (findCommentNb doesn't return the right comment)
+// Bug: when searching in english with strict option for "sati" -> AN 3.101 comment is only 75 words long
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
@@ -14,7 +15,7 @@ const availableSuttasJson = await fetchAvailableSuttas();
 
 async function searchSuttas(searchTerm, options) {
   searchTerm = cleanText(searchTerm.toLowerCase());
-  console.log(searchTerm); 
+  
   const resultsDiv = document.querySelector('.results');
   resultsDiv.innerHTML = ''; // Clear previous results
 
@@ -54,7 +55,7 @@ async function searchSuttas(searchTerm, options) {
         const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
         if (range) {
           const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#" + range;
-          await addResultToDOMAsync(id, titleEn, curateText(extractedText), link);
+          await addResultToDOMAsync(id, titleEn, extractedText, link);
           gotResults = true;
         }
       }
@@ -65,7 +66,7 @@ async function searchSuttas(searchTerm, options) {
           const commentNb = findCommentNb(suttaEn.comment, searchTerm);
           if (commentNb) {
             const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#comment" + commentNb;
-            await addResultToDOMAsync(id, titleEn + " - Comments", curateText(extractedText), link);
+            await addResultToDOMAsync(id, titleEn + " - Comments", extractedText, link);
             gotResults = true;
           }
         }
@@ -82,7 +83,7 @@ async function searchSuttas(searchTerm, options) {
         const range = findVerseRange(suttaPl.root_pli_ms, searchTerm, true);
         if (range) {
           const link = "https://suttas.hillsidehermitage.org/?q=" + suttaPl.id + "#" + range;
-          await addResultToDOMAsync(id, titlePl, curateText(extractedText), link);
+          await addResultToDOMAsync(id, titlePl, extractedText, link);
           gotResults = true;
         }
       }
@@ -203,9 +204,11 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
   if (pali) searchTerm = removeDiacritics(searchTerm);
   
   const lowerCaseSearchTerm = searchTerm.toLowerCase();
-  const searchTermRegex = strict ? new RegExp(`\\b${lowerCaseSearchTerm}\\b`, "gi") : new RegExp(`(${lowerCaseSearchTerm})`, "gi");
+  const searchTermRegex = strict 
+    ? new RegExp(`\\b${lowerCaseSearchTerm}\\b`, "gi") 
+    : new RegExp(`(${lowerCaseSearchTerm})`, "gi");
 
-  const verses = Object.entries(textData);
+  const verses = Object.entries(textData).map(([key, verse]) => [key, curateText(verse)]);
 
   if (!multipleVerse) {
     for (let [index, [key, verse]] of verses.entries()) {
@@ -216,32 +219,25 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
         const words = pali ? removeDiacritics(verse).split(" ") : verse.split(" ");
         const termWordIndex = lowerCaseVerse.slice(0, searchIndex).split(" ").length - 1;
 
-        // Ensure the search term is fully included
         const searchTermLengthInWords = lowerCaseSearchTerm.split(" ").length;
 
-        // If searchTerm is longer than maxWords, return only the searchTerm with [...] markers if applicable
         if (searchTermLengthInWords > maxWords) {
           let extractedText = `<b>${searchTerm}</b>`;
-          // Add "[...]" if there is text before the search term
           if (searchIndex > 0) {
             extractedText = "[...] " + extractedText;
           }
-          // Add "[...]" if there is text after the search term
           if (searchIndex + searchTerm.length < lowerCaseVerse.length) {
             extractedText = extractedText + " [...]";
           }
           return extractedText;
         }
 
-        // Calculate start and end indices around the search term
         let startWordIndex = Math.max(0, termWordIndex - (maxWords - searchTermLengthInWords) / 2);
         let endWordIndex = Math.min(words.length, termWordIndex + searchTermLengthInWords + (maxWords - searchTermLengthInWords) / 2);
 
-        // Adjust indices to not exceed total word count
         startWordIndex = Math.max(0, startWordIndex);
         endWordIndex = Math.min(words.length, endWordIndex);
 
-        // Ensure total extracted words do not exceed maxWords
         while (endWordIndex - startWordIndex > maxWords) {
           if (startWordIndex > 0) {
             startWordIndex++;
@@ -253,15 +249,14 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
         const adjustedWords = words.slice(startWordIndex, endWordIndex);
         let extractedText = adjustedWords.join(" ");
 
-        // Highlight the search term using the original text
-        const highlightRegex = strict ? new RegExp(`\\b${searchTerm}\\b`, "gi") : new RegExp(`(${searchTerm})`, "gi");
+        const highlightRegex = strict 
+          ? new RegExp(`(?<!\\S)${lowerCaseSearchTerm}(?!\\S)`, "gi") 
+          : new RegExp(`(${lowerCaseSearchTerm})`, "gi");
         extractedText = extractedText.replace(highlightRegex, `<b>$&</b>`);
 
-        // Add "[...]" to the beginning if the passage doesn't start at the beginning of the verse
         if (startWordIndex > 0) {
           extractedText = "[...] " + extractedText;
         }
-        // Add "[...]" to the end if the passage doesn't end at the end of the verse
         if (endWordIndex < words.length) {
           extractedText = extractedText + " [...]";
         }
@@ -269,28 +264,23 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
         return extractedText;
       }
     }
-    return null; // If the term is not found in any verse
+    return null; 
   }
 
-  // Multiple verse mode, concatenate all verses and perform the search
   const concatenatedText = verses.map(([, text]) => (pali ? removeDiacritics(text.toLowerCase()) : text.toLowerCase())).join("");
   
   const searchIndex = concatenatedText.search(searchTermRegex);
   if (searchIndex === -1) {
-    return null; // Term not found
+    return null; 
   }
 
-  // Ensure the search term is fully included
   const searchTermLengthInWords = lowerCaseSearchTerm.split(" ").length;
 
-  // If searchTerm is longer than maxWords, return only the searchTerm with [...] markers if applicable
   if (searchTermLengthInWords > maxWords) {
     let extractedText = `<b>${searchTerm}</b>`;
-    // Add "[...]" if there is text before the search term
     if (searchIndex > 0) {
       extractedText = "[...] " + extractedText;
     }
-    // Add "[...]" if there is text after the search term
     if (searchIndex + searchTerm.length < concatenatedText.length) {
       extractedText = extractedText + " [...]";
     }
@@ -306,7 +296,6 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
   startWordIndex = Math.max(0, startWordIndex);
   endWordIndex = Math.min(allWords.length, endWordIndex);
 
-  // Ensure total extracted words do not exceed maxWords
   while (endWordIndex - startWordIndex > maxWords) {
     if (startWordIndex > 0) {
       startWordIndex++;
@@ -318,21 +307,21 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
   const adjustedWords = allWords.slice(startWordIndex, endWordIndex);
   let extractedText = adjustedWords.join(" ");
 
-  // Highlight the search term in the original text
-  const highlightRegex = strict ? new RegExp(`\\b${searchTerm}\\b`, "gi") : new RegExp(`(${searchTerm})`, "gi");
+  const highlightRegex = strict 
+    ? new RegExp(`(?<!\\S)${lowerCaseSearchTerm}(?!\\S)`, "gi") 
+    : new RegExp(`(${lowerCaseSearchTerm})`, "gi");
   extractedText = extractedText.replace(highlightRegex, `<b>$&</b>`);
-
-  // Add "[...]" to the beginning if the passage doesn't start at the beginning of the first key-value pair
+  
   if (startWordIndex > 0) {
     extractedText = "[...] " + extractedText;
   }
-  // Add "[...]" to the end if the passage doesn't end at the end of the last key-value pair
   if (endWordIndex < allWords.length) {
     extractedText = extractedText + " [...]";
   }
   
   return extractedText;
 }
+
 
 
 function curateText(text) {
@@ -342,11 +331,12 @@ function curateText(text) {
 	// Replace hyperlink [link_text](url) with only link_text
     text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
 
-	// Replace words or expressions surrounded by _ or * with <i></i> tags
-    text = text.replace(/[_*]([^_*]+)[_*]/g, "<i>$1</i>");
+	// Replace words or expressions surrounded by _ or * with only text, otherwise can cause issue with highlighting
+    text = text.replace(/[_*]([^_*]+)[_*]/g, "$1");
 
     return text;
 }
+
 
 async function getSuttas(db, options, type){
 	let query;
