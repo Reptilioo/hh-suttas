@@ -1,8 +1,3 @@
-@font-face {
-  font-family: "RobotoSerif Bold";
-  src: url("RobotoSerif-Bold.ttf");
-}
-
 * {
 	box-sizing: border-box;
 	margin: 0;
