@@ -8,6 +8,11 @@
   src: url("RobotoSerif-Medium.ttf");
 }
 
+@font-face {
+  font-family: "RobotoSerif Bold";
+  src: url("RobotoSerif-Bold.ttf");
+}
+
 b{
   font-family: "RobotoSerif Medium";
   font-weight: normal;
