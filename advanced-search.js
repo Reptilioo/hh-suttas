@@ -1,11 +1,11 @@
 // Ensure that if the matching element appears multiple times in the same text, all occurrences should be displayed consecutively
 // Could be even more accurate in terms of the number of words it returns if we added other punctuation symbols to separate words
-// Handle the case where the search term is over 100 words long, we should display only the search term as a passage.
-// searchTerm should be curated by removing newlines and double spaces
 // Re-indent the file
 // See if we can optimize the code, particularly the findVerseRange() and findSearchTermPassage() functions
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
 // Add loading bar 
+// Cut in smaller functions
+// Bug: when searching in english with strict option for "sati" -> mn10 comment gets returned when it shouldn't, also when clicking it the comment link is broken (findCommentNb doesn't return the right comment)
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
@@ -13,7 +13,8 @@ import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSutta
 const availableSuttasJson = await fetchAvailableSuttas();
 
 async function searchSuttas(searchTerm, options) {
-  searchTerm = searchTerm.toLowerCase();
+  searchTerm = cleanText(searchTerm.toLowerCase());
+  console.log(searchTerm); 
   const resultsDiv = document.querySelector('.results');
   resultsDiv.innerHTML = ''; // Clear previous results
 
@@ -112,6 +113,23 @@ function findCommentNb(commentData, searchTerm) {
     return result;
 }
 
+// Makes sure that the sentence has the correct format and fits on one line only
+function cleanText(inputText) {
+    // Remove line breaks and extra spaces
+    let cleanedText = inputText
+        .replace(/\n/g, ' ') // Replace line breaks with spaces
+        .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
+        .trim(); // Trim spaces at the start and end
+
+    // Replace misplaced punctuation
+    cleanedText = cleanedText
+        .replace(/([,.!?])\s*(?=[A-Z])/g, '$1 ') // Add a space after punctuation if the next letter is uppercase
+        .replace(/\s*([,.!?])/g, '$1') // Remove spaces before punctuation
+        .replace(/(\s*-\s*)/g, '-') // Ensure no spaces around hyphens
+
+    return cleanedText;
+}
+
 function removeDiacritics(str) {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
@@ -169,8 +187,6 @@ function findVerseRange(textData, searchTerm, pali = false) {
   return `${startVerse}-${endVerse}`;
 }
 
-
-
 /**
  * Finds a passage of text containing a search term within a set of data.
  * 
@@ -183,45 +199,57 @@ function findVerseRange(textData, searchTerm, pali = false) {
  */
 function findSearchTermPassage(textData, searchTerm, multipleVerse = true, strict = false, pali = false) {
   const maxWords = 150;
-  const halfMaxWords = maxWords / 2;
 
   if (pali) searchTerm = removeDiacritics(searchTerm);
   
-  // Remove diacritics from searchTerm if pali is true
   const lowerCaseSearchTerm = searchTerm.toLowerCase();
   const searchTermRegex = strict ? new RegExp(`\\b${lowerCaseSearchTerm}\\b`, "gi") : new RegExp(`(${lowerCaseSearchTerm})`, "gi");
 
-  // Convert the verses into a list of entries [key, text]
   const verses = Object.entries(textData);
 
-  // Step 2: Search for the term in each individual verse if multipleVerse is false
   if (!multipleVerse) {
     for (let [index, [key, verse]] of verses.entries()) {
-      // Remove diacritics from the verse if pali is true
       const lowerCaseVerse = pali ? removeDiacritics(verse.toLowerCase()) : verse.toLowerCase();
       const searchIndex = lowerCaseVerse.search(searchTermRegex);
       
-      // If the term is found in the current verse
       if (searchIndex !== -1) {
-        const words = pali ? removeDiacritics(verse).split(" ") : verse.split(" "); // Original text to preserve casing
+        const words = pali ? removeDiacritics(verse).split(" ") : verse.split(" ");
         const termWordIndex = lowerCaseVerse.slice(0, searchIndex).split(" ").length - 1;
 
-        // Calculate start and end indices within the verse boundaries
-        let startWordIndex = Math.max(0, termWordIndex - halfMaxWords);
-        let endWordIndex = Math.min(words.length, termWordIndex + halfMaxWords);
+        // Ensure the search term is fully included
+        const searchTermLengthInWords = lowerCaseSearchTerm.split(" ").length;
 
-        // Adjust indices to get exactly 100 words without exceeding the verse
-        const totalWords = endWordIndex - startWordIndex;
-        if (totalWords < maxWords) {
-          const deficit = maxWords - totalWords;
+        // If searchTerm is longer than maxWords, return only the searchTerm with [...] markers if applicable
+        if (searchTermLengthInWords > maxWords) {
+          let extractedText = `<b>${searchTerm}</b>`;
+          // Add "[...]" if there is text before the search term
+          if (searchIndex > 0) {
+            extractedText = "[...] " + extractedText;
+          }
+          // Add "[...]" if there is text after the search term
+          if (searchIndex + searchTerm.length < lowerCaseVerse.length) {
+            extractedText = extractedText + " [...]";
+          }
+          return extractedText;
+        }
+
+        // Calculate start and end indices around the search term
+        let startWordIndex = Math.max(0, termWordIndex - (maxWords - searchTermLengthInWords) / 2);
+        let endWordIndex = Math.min(words.length, termWordIndex + searchTermLengthInWords + (maxWords - searchTermLengthInWords) / 2);
+
+        // Adjust indices to not exceed total word count
+        startWordIndex = Math.max(0, startWordIndex);
+        endWordIndex = Math.min(words.length, endWordIndex);
+
+        // Ensure total extracted words do not exceed maxWords
+        while (endWordIndex - startWordIndex > maxWords) {
           if (startWordIndex > 0) {
-            startWordIndex = Math.max(0, startWordIndex - deficit);
+            startWordIndex++;
           } else {
-            endWordIndex = Math.min(words.length, endWordIndex + deficit);
+            endWordIndex++;
           }
         }
 
-        // Extract the adjusted words and re-form the text
         const adjustedWords = words.slice(startWordIndex, endWordIndex);
         let extractedText = adjustedWords.join(" ");
 
@@ -252,29 +280,46 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
     return null; // Term not found
   }
 
-  // Search around the term with a limit of 100 words in the concatenated text
+  // Ensure the search term is fully included
+  const searchTermLengthInWords = lowerCaseSearchTerm.split(" ").length;
+
+  // If searchTerm is longer than maxWords, return only the searchTerm with [...] markers if applicable
+  if (searchTermLengthInWords > maxWords) {
+    let extractedText = `<b>${searchTerm}</b>`;
+    // Add "[...]" if there is text before the search term
+    if (searchIndex > 0) {
+      extractedText = "[...] " + extractedText;
+    }
+    // Add "[...]" if there is text after the search term
+    if (searchIndex + searchTerm.length < concatenatedText.length) {
+      extractedText = extractedText + " [...]";
+    }
+    return extractedText;
+  }
+
   const allWords = verses.map(([, text]) => (pali ? removeDiacritics(text) : text)).join("").split(" ");
   const termWordIndex = concatenatedText.slice(0, searchIndex).split(" ").length - 1;
 
-  let startWordIndex = Math.max(0, termWordIndex - halfMaxWords);
-  let endWordIndex = Math.min(allWords.length, termWordIndex + halfMaxWords);
+  let startWordIndex = Math.max(0, termWordIndex - (maxWords - searchTermLengthInWords) / 2);
+  let endWordIndex = Math.min(allWords.length, termWordIndex + searchTermLengthInWords + (maxWords - searchTermLengthInWords) / 2);
 
-  const totalWords = endWordIndex - startWordIndex;
-  if (totalWords < maxWords) {
-    const deficit = maxWords - totalWords;
+  startWordIndex = Math.max(0, startWordIndex);
+  endWordIndex = Math.min(allWords.length, endWordIndex);
+
+  // Ensure total extracted words do not exceed maxWords
+  while (endWordIndex - startWordIndex > maxWords) {
     if (startWordIndex > 0) {
-      startWordIndex = Math.max(0, startWordIndex - deficit);
+      startWordIndex++;
     } else {
-      endWordIndex = Math.min(allWords.length, endWordIndex + deficit);
+      endWordIndex++;
     }
   }
 
-  const adjustedWords = allWords.slice(startWordIndex, startWordIndex + maxWords);
+  const adjustedWords = allWords.slice(startWordIndex, endWordIndex);
   let extractedText = adjustedWords.join(" ");
 
   // Highlight the search term in the original text
   const highlightRegex = strict ? new RegExp(`\\b${searchTerm}\\b`, "gi") : new RegExp(`(${searchTerm})`, "gi");
-
   extractedText = extractedText.replace(highlightRegex, `<b>$&</b>`);
 
   // Add "[...]" to the beginning if the passage doesn't start at the beginning of the first key-value pair
@@ -288,6 +333,7 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
   
   return extractedText;
 }
+
 
 function curateText(text) {
 	// Replace every multiples <br> and variantes by only one tag
