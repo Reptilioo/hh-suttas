@@ -116,6 +116,10 @@ h2, h3{
 	width: 100%;
 }
 
+.result.placeholder p{
+	margin-top:1rem;
+}
+
 .dark .result {
     background-color: var(--dark-brown);
 }
@@ -145,6 +149,14 @@ b {
     color: var(--light-orange);
 }
 
+b.dark{
+	color: var(--dark-orange);
+}
+
+.dark b.dark{
+	color: var(--light-orange);
+}
+
 @media (max-width: 768px) {
 	#searchContainer{
 		flex-direction: column;
@@ -154,6 +166,7 @@ b {
 		width: 100%;
 		border-right: none;
 		border-bottom: 1px solid #ddd;
+		padding: 10px 0;
 	}
 	#optionPanel > .search-field,
 	#optionPanel > .search-btn{
