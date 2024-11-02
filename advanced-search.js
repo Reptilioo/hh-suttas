@@ -5,6 +5,8 @@
 // Re-indent the file
 // See if we can optimize the code, particularly the findVerseRange() and findSearchTermPassage() functions
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
+// Add loading bar
+// If we search a very commin term like "e", it looks like all the results appear together after the search is done, rather than appearing gradually 
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
