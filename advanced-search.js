@@ -4,7 +4,6 @@
 // See if we can optimize the code, particularly the findVerseRange() and findSearchTermPassage() functions
 // Cut in smaller functions?
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
-// Add loading bar 
 // After X results, having a button next to stop button to load more?
 // Find a better way to get the comment link??
 // Remove searchSuttas() si searchSuttasWithStop() doesn't bug
@@ -13,173 +12,100 @@ import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
 
 const availableSuttasJson = await fetchAvailableSuttas();
-
+ 
+//Search suttas by search term and language options.
 async function searchSuttasWithStop(searchTerm, options) {
     const resultsDiv = document.querySelector('.results');
-    resultsDiv.innerHTML = ''; // Remove previous search results
+    const loadingBar = document.getElementById('loadingBar');
+    resultsDiv.innerHTML = ''; // Clear previous results
+    loadingBar.style.width = '0%'; // Reset loading bar
 
-    let suttasEn;
-    let elmtsNb = 0;
+    let suttasEn = [];
+    let suttasPl = [];
+    let totalIterations = 0;
 
+    // Load data based on language options
     if (options['en']) {
         suttasEn = await getSuttas(db, options, 'en');
-        elmtsNb = suttasEn.length;
+        totalIterations += suttasEn.length * 2; // In English, we do two searches (translation and comment)
     }
-
-    let suttasPl;
     if (options['pali']) {
         suttasPl = await getSuttas(db, options, 'pl');
-        if (elmtsNb < 1) {
-            elmtsNb = suttasPl.length;
-        }
+        totalIterations += suttasPl.length; // In Pali, one search
     }
 
+    let currentIteration = 0;
     let gotResults = false;
 
-    for (let i = 0; i < elmtsNb; i++) {
-        if (shouldStopSearch) return; // Stop search if Stop button is clicked
+    for (let i = 0; i < Math.max(suttasEn.length, suttasPl.length); i++) {
+        if (shouldStopSearch){
+			loadingBar.style.width = '0%';
+			return; // Stop search if "Stop" button is clicked
+		}
 
-        let id;
-        let idSet = false;
-
-        if (options['en']) {
+        // Search in English
+        if (options['en'] && i < suttasEn.length) {
             const suttaEn = suttasEn[i];
-            let titleEn = availableSuttasJson[suttaEn.id]?.title || "Unknown Title";
-            const heading = availableSuttasJson[suttaEn.id]?.heading || null;
-            if (heading) titleEn = `${titleEn} (${heading})`;
+            const titleEn = availableSuttasJson[suttaEn.id]?.title || "Unknown Title";
+            let id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
 
-            id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
-            idSet = true;
-
-			// Search in translation_en_anigha
+            // Search in translation_en_anigha
             const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
             if (extractedText) {
                 const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
                 if (range) {
-                    const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#" + range;
+                    const link = `https://suttas.hillsidehermitage.org/?q=${suttaEn.id}#${range}`;
                     await addResultToDOMAsync(id, titleEn, extractedText, link);
                     gotResults = true;
                 }
             }
-
-			// Search in comments
+            currentIteration++;
+			setTimeout(() => {
+				loadingBar.style.width = `${(currentIteration / totalIterations) * 100}%`; // Update loading bar
+			}, 0);
+            
+            // Search in comments
             if (suttaEn.comment) {
-                const extractedText = findSearchTermPassage(suttaEn.comment, searchTerm, false, options['strict']);
-                if (extractedText) {
-                    const commentNb = findCommentNb(suttaEn.comment, extractedText);
+                const extractedComment = findSearchTermPassage(suttaEn.comment, searchTerm, false, options['strict']);
+                if (extractedComment) {
+                    const commentNb = findCommentNb(suttaEn.comment, extractedComment);
                     if (commentNb) {
-                        const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#comment" + commentNb;
-                        await addResultToDOMAsync(id, titleEn + " - Comments", extractedText, link);
+                        const link = `https://suttas.hillsidehermitage.org/?q=${suttaEn.id}#comment${commentNb}`;
+                        await addResultToDOMAsync(id, titleEn + " - Comments", extractedComment, link);
                         gotResults = true;
                     }
                 }
             }
+            currentIteration++;
+            loadingBar.style.width = `${(currentIteration / totalIterations) * 100}%`;
         }
 
-        if (options['pali']) {
+        // Search in Pali
+        if (options['pali'] && i < suttasPl.length) {
             const suttaPl = suttasPl[i];
             const titlePl = availableSuttasJson[suttaPl.id]?.pali_title || "Unknown Title";
-            if (!idSet) id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
+            const id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
 
-			// Search in pali
             const extractedText = findSearchTermPassage(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true);
             if (extractedText) {
                 const range = findVerseRange(suttaPl.root_pli_ms, searchTerm, true);
                 if (range) {
-                    const link = "https://suttas.hillsidehermitage.org/?q=" + suttaPl.id + "#" + range;
+                    const link = `https://suttas.hillsidehermitage.org/?q=${suttaPl.id}#${range}`;
                     await addResultToDOMAsync(id, titlePl, extractedText, link);
                     gotResults = true;
                 }
             }
+            currentIteration++;
+            loadingBar.style.width = `${(currentIteration / totalIterations) * 100}%`;
         }
     }
 
     if (!gotResults) {
-        addResultToDOM("", "No results found", "No results were found with the expression '" + searchTerm + "'.", "none");
-    }
-}
-
-//REMOVE?
-async function searchSuttas(searchTerm, options) {
-  searchTerm = cleanSearchTerm(searchTerm.toLowerCase());
-  
-  const resultsDiv = document.querySelector('.results');
-  resultsDiv.innerHTML = ''; // Clear previous results
-
-  let suttasEn;
-  let elmtsNb = 0;
-
-  if (options['en']) {
-    suttasEn = await getSuttas(db, options, 'en');
-    elmtsNb = suttasEn.length;
-  }
-
-  let suttasPl;
-  if (options['pali']) {
-    suttasPl = await getSuttas(db, options, 'pl');
-    if (elmtsNb < 1) {
-      elmtsNb = suttasPl.length;
-    }
-  }
-
-  let gotResults = false;
-
-  for (let i = 0; i < elmtsNb; i++) {
-    let id;
-    let idSet = false;
-
-    if (options['en']) {
-      const suttaEn = suttasEn[i];
-      let titleEn = availableSuttasJson[suttaEn.id]?.title || "Unknown Title";
-      const heading = availableSuttasJson[suttaEn.id]?.heading || null;
-      if (heading) titleEn = `${titleEn} (${heading})`
-
-      id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
-      idSet = true;
-
-      const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
-      if (extractedText) {
-        const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
-        if (range) {
-          const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#" + range;
-          await addResultToDOMAsync(id, titleEn, extractedText, link);
-          gotResults = true;
-        }
-      }
-
-      if (suttaEn.comment) {
-        const extractedText = findSearchTermPassage(suttaEn.comment, searchTerm, false, options['strict']);
-        if (extractedText) {
-          const commentNb = findCommentNb(suttaEn.comment, extractedText);
-          if (commentNb) {
-            const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#comment" + commentNb;
-            await addResultToDOMAsync(id, titleEn + " - Comments", extractedText, link);
-            gotResults = true;
-          }
-        }
-      }
+        addResultToDOM("", "No results found", `No results were found with the expression '${searchTerm}'.`, "none");
     }
 
-    if (options['pali']) {
-      const suttaPl = suttasPl[i];
-      const titlePl = availableSuttasJson[suttaPl.id]?.pali_title || "Unknown Title";
-      if (!idSet) id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
-
-      const extractedText = findSearchTermPassage(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true);
-      if (extractedText) {
-        const range = findVerseRange(suttaPl.root_pli_ms, searchTerm, true);
-        if (range) {
-          const link = "https://suttas.hillsidehermitage.org/?q=" + suttaPl.id + "#" + range;
-          await addResultToDOMAsync(id, titlePl, extractedText, link);
-          gotResults = true;
-        }
-      }
-    }
-  }
-
-  if (!gotResults) {
-    addResultToDOM("", "No results found", "No results were found with the expression '" + searchTerm + "'.", "none");
-  }
+    // Reset loading bar after search is complete
+    loadingBar.style.width = '0%';
 }
 
 // Search extractedText (without the added <b></b> and [...]) in each comments to find the position of the matching comment
@@ -417,8 +343,6 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
   return extractedText;
 }
 
-
-
 function curateText(text) {
 	// Replace every multiples <br> and variantes by only one tag
     text = text.replace(/<br\s*\/?>\s*(<br\s*\/?>\s*)+/gi, "<br/>");
@@ -431,7 +355,6 @@ function curateText(text) {
 
     return text;
 }
-
 
 async function getSuttas(db, options, type){
 	let query;
