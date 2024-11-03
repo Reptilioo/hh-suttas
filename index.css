@@ -33,6 +33,8 @@ b{
   --blue: #3434be;
   --dark-brown: #3F3234;
   --darker-brown: #201B1F;
+  --red: #CC0000;
+  --darker-red: #A70000;
 }
 
 body {
