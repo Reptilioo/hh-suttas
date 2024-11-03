@@ -93,6 +93,10 @@ h2, h3{
 	border-radius: 5px;
 }
 
+.search-btn.red{
+	background-color: var(--red);
+}
+
 .dark .search-btn{
 	border: 2px solid #BBB;
 }
@@ -104,6 +108,10 @@ h2, h3{
 
 .search-btn:enabled:hover {
 	background-color: var(--darker-brown);
+}
+
+.search-btn.red:enabled:hover{
+	background-color: var(--darker-red);
 }
 
 .content {
