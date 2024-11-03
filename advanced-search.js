@@ -3,7 +3,6 @@
 // Refactorisation?
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
 // After X results, having a button next to stop button to load more?
-// Needs to get lettercase back on displayed passages
 
 import db from "./js/dexie/dexie.js";
 import {
@@ -15,7 +14,7 @@ const availableSuttasJson = await fetchAvailableSuttas();
 //Search suttas by search term and language options.
 async function searchSuttasWithStop(searchTerm, options) {
 	searchTerm = cleanSearchTerm(searchTerm.toLowerCase());
-	
+
 	const resultsDiv = document.querySelector('.results');
 	const loadingBar = document.getElementById('loadingBar');
 	resultsDiv.innerHTML = ''; // Clear previous results
@@ -55,10 +54,9 @@ async function searchSuttasWithStop(searchTerm, options) {
 
 			// Search in translation_en_anigha
 			const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
-			console.log(extractedText);
+
 			if (extractedText) {
 				const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
-				console.log(range);
 				if (range) {
 					const link = `https://suttas.hillsidehermitage.org/?q=${suttaEn.id}#${range}`;
 					await addResultToDOMAsync(id, titleEn, extractedText, link);
@@ -117,30 +115,6 @@ async function searchSuttasWithStop(searchTerm, options) {
 	}, 0);
 }
 
-// Search extractedText (without the added <b></b> and [...]) in each comments to find the position of the matching comment
-function findCommentNb(commentData, extractedText) {
-	// Removes <b></b> and [...]
-	const sanitizedExtractedText = extractedText.replace(/<b>|<\/b>| \[\.\.\.\]|\[\.\.\.\] /g, "").toLowerCase();
-	const result = [];
-	let line = 1;
-
-	for (const [key, value] of Object.entries(commentData)) {
-		// Ignore empty lines
-		if (value === "") continue;
-
-		const sanitizedValue = curateText(value).toLowerCase();
-
-		// Compare extractedText with comment line
-		if (sanitizedValue.includes(sanitizedExtractedText)) {
-			return line;
-		}
-
-		line++;
-	}
-
-	return null;
-}
-
 // Makes sure that the sentence has the correct format and fits on one line only
 function cleanSearchTerm(inputText) {
 	// Remove line breaks and extra spaces
@@ -163,58 +137,63 @@ function removeDiacritics(str) {
 }
 
 function findVerseRange(textData, searchTerm, pali = false) {
-  let verseKeys = Object.keys(textData);
-  let currentText = "";
-  let verseIndexMap = {};
+	let verseKeys = Object.keys(textData);
+	let currentText = "";
+	let verseIndexMap = {};
 
-  // If pali is true, remove diacritics from searchTerm
-  if (pali)
-    searchTerm = removeDiacritics(searchTerm);
+	// If pali is true, remove diacritics from searchTerm
+	if (pali)
+		searchTerm = removeDiacritics(searchTerm);
 
-  // Creates an accumulated text and records the positions of each verse
-  for (let i = 0; i < verseKeys.length; i++) {
-    const verse = verseKeys[i];
-    let text = textData[verse];
+	// Creates an accumulated text and records the positions of each verse
+	for (let i = 0; i < verseKeys.length; i++) {
+		const verse = verseKeys[i];
+		let text = textData[verse];
 
-    // If pali is true, remove diacritics from text as well
-    if (pali) 
-      text = removeDiacritics(text);
+		// If pali is true, remove diacritics from text as well
+		if (pali)
+			text = removeDiacritics(text);
 
-    // Records the starting and ending index of each verse in the accumulated text
-    verseIndexMap[verse] = { start: currentText.length, end: currentText.length + text.length };
-    currentText += text.toLowerCase();
-  }
+		// Records the starting and ending index of each verse in the accumulated text
+		verseIndexMap[verse] = {
+			start: currentText.length,
+			end: currentText.length + text.length
+		};
+		currentText += text.toLowerCase();
+	}
 
-  // Searches for the starting and ending index of the searchTerm in the accumulated text
-  const startIndex = currentText.indexOf(searchTerm);
-  if (startIndex === -1) {
-    return null;
-  }
-  const endIndex = startIndex + searchTerm.length;
+	// Searches for the starting and ending index of the searchTerm in the accumulated text
+	const startIndex = currentText.indexOf(searchTerm);
+	if (startIndex === -1) {
+		return null;
+	}
+	const endIndex = startIndex + searchTerm.length;
 
-  // Identifies the starting and ending verses
-  let startVerse = null;
-  let endVerse = null;
+	// Identifies the starting and ending verses
+	let startVerse = null;
+	let endVerse = null;
 
-  for (let i = 0; i < verseKeys.length; i++) {
-    const verse = verseKeys[i];
-    const { start, end } = verseIndexMap[verse];
+	for (let i = 0; i < verseKeys.length; i++) {
+		const verse = verseKeys[i];
+		const {
+			start,
+			end
+		} = verseIndexMap[verse];
 
-    // Finds the verse where the searchTerm starts
-    if (start <= startIndex && startIndex < end) {
-      startVerse = verse;
-    }
+		// Finds the verse where the searchTerm starts
+		if (start <= startIndex && startIndex < end) {
+			startVerse = verse;
+		}
 
-    // Finds the verse where the searchTerm ends
-    if (start < endIndex && endIndex <= end) {
-      endVerse = verse;
-      break; // Stops the loop once the endVerse is found
-    }
-  }
+		// Finds the verse where the searchTerm ends
+		if (start < endIndex && endIndex <= end) {
+			endVerse = verse;
+			break; // Stops the loop once the endVerse is found
+		}
+	}
 
-  return `${startVerse}-${endVerse}`;
+	return `${startVerse}-${endVerse}`;
 }
-
 
 /**
  * Finds a passage of text containing a search term within a set of data.
@@ -234,60 +213,53 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
 
 	// Create search term regex based on strict mode
 	const lowerCaseSearchTerm = searchTerm.toLowerCase();
+	const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	const searchTermRegex = new RegExp(
-		strict ? `(^|\\s|[.,!?\\(\\)]|\\b)(${lowerCaseSearchTerm})(?=\\s|[.,!?\\(\\)]|$)` : `(${lowerCaseSearchTerm})`,
+		strict ? `(^|\\s|[.,!?\\(\\)]|\\b)(${escapeRegex(lowerCaseSearchTerm)})(?=\\s|[.,!?\\(\\)]|$)` : `(${escapeRegex(lowerCaseSearchTerm)})`,
 		"gi"
 	);
 
-	// Convert textData into an array of verses with optional diacritic removal
-	const verses = Object.entries(textData).map(([key, verse]) => [
-		key, pali ? removeDiacritics(curateText(verse)) : curateText(verse)
-	]);
+	// Convert textData into an array of verses
+	const verses = Object.entries(textData).map(([key, verse]) => [key, pali ? removeDiacritics(curateText(verse)) : curateText(verse)]);
 
-	/**
-	 * Highlights the search term in a given text.
-	 * @param {string} text - Text in which to highlight the search term
-	 * @returns {string} - Text with the search term highlighted
-	 */
+	// Highlight text function
 	const highlightText = (text) => (
 		strict ?
-		text.replace(new RegExp(searchTermRegex, "gi"), `$1<b>$2</b>`) :
-		text.replace(new RegExp(searchTermRegex, "gi"), `<b>$1</b>`)
+		text.replace(searchTermRegex, `$1<b>$2</b>`) :
+		text.replace(searchTermRegex, `<b>$1</b>`)
 	);
 
-	/**
-	 * Extracts a passage around the search term with optional ellipses.
-	 * @param {string[]} words - Array of words to extract from
-	 * @param {number} startIdx - Starting index for extraction
-	 * @param {number} endIdx - Ending index for extraction
-	 * @returns {string} - Final extracted passage with highlights and ellipses
-	 */
 	const extractPassage = (words, startIdx, endIdx) => {
 		let passage = words.slice(startIdx, endIdx).join(" ");
 		passage = highlightText(passage);
-		
+
 		// Add ellipses at the start or end if not showing the entire text
 		if (startIdx > 0) passage = "[...] " + passage;
 		if (endIdx < words.length) passage += " [...]";
-		
+
 		return passage;
 	};
 
-	/**
-	 * Searches a single verse and extracts the passage around the term if found.
-	 * @param {string} verse - The text of the verse to search
-	 * @returns {string|null} - Extracted passage with highlight if found, else null
-	 */
-	const findInSingleVerse = (verse) => {
-		const lowerCaseVerse = verse.toLowerCase();
-		const searchIndex = lowerCaseVerse.search(searchTermRegex);
+	const findInSingleVerse = (verse, originalVerse) => {
+		const searchIndex = verse.search(searchTermRegex);
 
 		if (searchIndex === -1) return null; // Term not found in this verse
 
 		// Split into words for easy passage extraction
 		const words = verse.split(" ");
-		const termWordIndex = lowerCaseVerse.slice(0, searchIndex).split(" ").length - 1;
+		const originalWords = originalVerse.split(" ");
+		const termWordIndex = verse.slice(0, searchIndex).split(" ").length - 1;
 		const searchTermLengthInWords = lowerCaseSearchTerm.split(" ").length;
+
+		// Check if searchTerm is longer than maxWords
+		if (searchTermLengthInWords > maxWords) {
+			// Extract the original text of the search term from the original verse
+			const highlightedTerm = `<b>${originalWords.slice(termWordIndex, termWordIndex + searchTermLengthInWords).join(" ")}</b>`;
+			let passage = highlightedTerm;
+			if (termWordIndex > 0) passage = "[...] " + passage;
+			if (termWordIndex + searchTermLengthInWords < words.length) passage += " [...]";
+			return passage;
+		}
 
 		// Calculate the start and end indices for extracting up to maxWords
 		let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - searchTermLengthInWords) / 2));
@@ -296,38 +268,48 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
 		return extractPassage(words, startIdx, endIdx);
 	};
 
-	// If searching within single verses only
 	if (!multipleVerse) {
-		let line = 1;
-		for (const [, verse] of verses) {
-			const result = findInSingleVerse(verse);
+		let commentNb = 1;
+		for (const [key, verse] of verses) {
+			const originalVerse = textData[key]; // Get the original text using the correct key
+			const result = findInSingleVerse(verse, originalVerse);
 			if (result) return {
 				extractedComment: result,
-				commentNb: line
+				commentNb: commentNb
 			}; // Return extractedComment and commentNb on first match
-			if (verse != "") line++;
+			if (verse != "") commentNb++;
 		}
 		return null; // No match found in any verse
 	}
-	
+
 	// Concatenate all verses for multi-verse searching
-	const concatenatedText = verses.map(([, text]) => text.toLowerCase()).join("");
-	
+	const concatenatedText = verses.map(([, text]) => text).join("");
+	const concatenatedOriginalText = Object.values(textData).join(""); // Get case-sensitive concatenated text
+
 	const searchIndex = concatenatedText.search(searchTermRegex);
-	
 	const searchTermLengthInWords = lowerCaseSearchTerm.split(" ").length;
-	
+
 	if (searchIndex === -1) return null; // No match in concatenated text
 
 	// Split concatenated text into words for passage extraction
 	const allWords = concatenatedText.split(" ");
-	
+	const originalWords = concatenatedOriginalText.split(" ");
 	const termWordIndex = concatenatedText.slice(0, searchIndex).split(" ").length - 1;
-	
+
+	// Check if searchTerm is longer than maxWords
+	if (searchTermLengthInWords > maxWords) {
+		// Extract the original text of the search term from the original text
+		const highlightedTerm = `<b>${originalWords.slice(termWordIndex, termWordIndex + searchTermLengthInWords).join(" ")}</b>`;
+		let passage = highlightedTerm;
+		if (termWordIndex > 0) passage = "[...] " + passage;
+		if (termWordIndex + searchTermLengthInWords < allWords.length) passage += " [...]";
+		return passage;
+	}
+
 	// Calculate start and end indices for extracting up to maxWords
 	let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - searchTermLengthInWords) / 2));
 	let endIdx = Math.min(allWords.length, startIdx + maxWords);
-	
+
 	return extractPassage(allWords, startIdx, endIdx);
 }
 
