@@ -79,63 +79,68 @@
 		</div>
 	</div>
 	
-	<div id="searchContainer">
-		<div id="optionPanel">
-			<h2>Search Options</h2>
-			<div class="search-field">
-				<input id="searchInput" type="text" placeholder="Search terms">
-				<button id="searchButton" class="search-btn">Search</button>
+	<div id="panelsContainer">
+		<div class="loading-bar-container">
+			<div class="loading-bar" id="loadingBar"></div>
+		</div>
+		<div id="searchContainer">
+			<div id="optionPanel">
+				<h2>Search Options</h2>
+				<div class="search-field">
+					<input id="searchInput" type="text" placeholder="Search terms">
+					<button id="searchButton" class="search-btn">Search</button>
+				</div>
+				
+				<div id="configuration">
+					<div id="langOption" class="options">
+						<h3>Language</h3>
+						<label><input type="checkbox" name="lang" value="en" checked> English</label>
+						<label><input type="checkbox" name="lang" value="pali"> Pali</label>
+					</div>
+					<div id="bookOption" class="options">
+						<h3>Books</h3>
+						<label><input type="checkbox" name="book" value="dn" checked> DN</label>
+						<label><input type="checkbox" name="book" value="mn" checked> MN</label>
+						<label><input type="checkbox" name="book" value="sn" checked> SN</label>
+						<label><input type="checkbox" name="book" value="an" checked> AN</label>
+						<label><input type="checkbox" name="book" value="kn" checked> KN</label>
+					</div>
+					<div id="strictOption" class="options">
+						<h3>Exact Match</h3>
+						<label><input type="checkbox" name="book" value="strict"> On</label>
+					</div>
+				</div>
 			</div>
 			
-			<div id="configuration">
-				<div id="langOption" class="options">
-					<h3>Language</h3>
-					<label><input type="checkbox" name="lang" value="en" checked> English</label>
-					<label><input type="checkbox" name="lang" value="pali"> Pali</label>
-				</div>
-				<div id="bookOption" class="options">
-					<h3>Books</h3>
-					<label><input type="checkbox" name="book" value="dn" checked> DN</label>
-					<label><input type="checkbox" name="book" value="mn" checked> MN</label>
-					<label><input type="checkbox" name="book" value="sn" checked> SN</label>
-					<label><input type="checkbox" name="book" value="an" checked> AN</label>
-					<label><input type="checkbox" name="book" value="kn" checked> KN</label>
-				</div>
-				<div id="strictOption" class="options">
-					<h3>Exact Match</h3>
-					<label><input type="checkbox" name="book" value="strict"> On</label>
-				</div>
-			</div>
-		</div>
-		
-		<div class="content">
-			<div class="results">
-				<div class="result placeholder">
-					<h1>Hillside Hermitage Advanced Suttas Search</h1>
-					<br>
-					<p>
-					1. <b class="dark">Choose your language:</b> Select the language you'd like to search in. Keep in mind that some Pali terms might appear in English translations and comments.
-					<br>
-					<br>
-					2. <b class="dark">Pick your books:</b> Select the specific books you want to search within.
-					<br>
-					<br>
-					3. <b class="dark">Refine your search:</b> Decide if you want to find exact matches for your search terms. For example, if you search for "training," you'll only see results that contain that exact word, not words like "restraining."
-					<br>
-					<br>
-					4. <b class="dark">Find what you are looking for:</b> Type your search terms and press Enter.
-					<br>
-					<br>
-					<br>
-					<b class="dark">Dark mode</b>
-					<br>
-					You can switch to dark mode by clicking the button at the top of the page.
-					<br>
-					<br>
-					<b class="dark">Having trouble?</b>
-					<br>
-					First, try clicking the "Reset Website" button below. If the issue persists, please report it using the "Report an error" button.
-					</p>
+			<div class="content">		
+				<div class="results">
+					<div class="result placeholder">
+						<h1>Hillside Hermitage Advanced Suttas Search</h1>
+						<br>
+						<p>
+						1. <b class="dark">Choose your language:</b> Select the language you'd like to search in. Keep in mind that some Pali terms might appear in English translations and comments.
+						<br>
+						<br>
+						2. <b class="dark">Pick your books:</b> Select the specific books you want to search within.
+						<br>
+						<br>
+						3. <b class="dark">Refine your search:</b> Decide if you want to find exact matches for your search terms. For example, if you search for "training," you'll only see results that contain that exact word, not words like "restraining."
+						<br>
+						<br>
+						4. <b class="dark">Find what you are looking for:</b> Type your search terms and press Enter.
+						<br>
+						<br>
+						<br>
+						<b class="dark">Dark mode</b>
+						<br>
+						You can switch to dark mode by clicking the button at the top of the page.
+						<br>
+						<br>
+						<b class="dark">Having trouble?</b>
+						<br>
+						First, try clicking the "Reset Website" button below. If the issue persists, please report it using the "Report an error" button.
+						</p>
+					</div>
 				</div>
 			</div>
 		</div>
