@@ -7,6 +7,8 @@
 // Still need to extract range in findSearchTermPassage
 // Still need to modify the pali processing part in searchSuttasWithStop
 // Highlight issue with strict (last letter isn't comprised)
+// If searcmTerm.length > maxWords : Needs to display the whole searchTerm with textData lettercase and with ellipses
+// Need to add options for unique passage ou multiple passages
 
 import db from "./js/dexie/dexie.js";
 import {
@@ -237,11 +239,12 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 
 	// Create search term regex based on strict mode
 	const lowerCaseSearchTerm = searchTerm.toLowerCase();
+	const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	const searchTermRegex = new RegExp(
-		strict ? `(^|\\s|[.,!?\\(\\)]|\\b)(${lowerCaseSearchTerm})(?=\\s|[.,!?\\(\\)]|$)` : `(${lowerCaseSearchTerm})`,
+		strict ? `(^|\\s|[.,!?\\(\\)]|\\b)(${escapeRegex(lowerCaseSearchTerm)})(?=\\s|[.,!?\\(\\)]|$)` : `(${escapeRegex(lowerCaseSearchTerm)})`,
 		"gi"
 	);
-
+	
 	// Convert textData into an array of verses with optional diacritic removal
 	const verses = Object.entries(textData).map(([key, verse]) => [
 		key, pali ? removeDiacritics(curateText(verse)) : curateText(verse)
