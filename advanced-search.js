@@ -6,6 +6,7 @@
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
 // After X results, having a button next to stop button to load more?
 // Find a better way to get the comment link??
+// Remove searchSuttas() si searchSuttasWithStop() doesn't bug
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
@@ -38,7 +39,10 @@ async function searchSuttasWithStop(searchTerm, options) {
 
     for (let i = 0; i < Math.max(suttasEn.length, suttasPl.length); i++) {
         if (shouldStopSearch){
-			loadingBar.style.width = '0%';
+			setTimeout(() => {
+				// Reset loading bar when search is stopped
+				loadingBar.style.width = '0%';
+			}, 0);
 			return; // Stop search if "Stop" button is clicked
 		}
 
