@@ -5,15 +5,101 @@
 // Cut in smaller functions?
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
 // Add loading bar 
-// Having a stop search button next to the loading bar
 // After X results, having a button next to stop button to load more?
 // Find a better way to get the comment link??
+// Remove searchSuttas() si searchSuttasWithStop() doesn't bug
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
 
 const availableSuttasJson = await fetchAvailableSuttas();
 
+async function searchSuttasWithStop(searchTerm, options) {
+    const resultsDiv = document.querySelector('.results');
+    resultsDiv.innerHTML = ''; // Remove previous search results
+
+    let suttasEn;
+    let elmtsNb = 0;
+
+    if (options['en']) {
+        suttasEn = await getSuttas(db, options, 'en');
+        elmtsNb = suttasEn.length;
+    }
+
+    let suttasPl;
+    if (options['pali']) {
+        suttasPl = await getSuttas(db, options, 'pl');
+        if (elmtsNb < 1) {
+            elmtsNb = suttasPl.length;
+        }
+    }
+
+    let gotResults = false;
+
+    for (let i = 0; i < elmtsNb; i++) {
+        if (shouldStopSearch) return; // Stop search if Stop button is clicked
+
+        let id;
+        let idSet = false;
+
+        if (options['en']) {
+            const suttaEn = suttasEn[i];
+            let titleEn = availableSuttasJson[suttaEn.id]?.title || "Unknown Title";
+            const heading = availableSuttasJson[suttaEn.id]?.heading || null;
+            if (heading) titleEn = `${titleEn} (${heading})`;
+
+            id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
+            idSet = true;
+
+			// Search in translation_en_anigha
+            const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
+            if (extractedText) {
+                const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
+                if (range) {
+                    const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#" + range;
+                    await addResultToDOMAsync(id, titleEn, extractedText, link);
+                    gotResults = true;
+                }
+            }
+
+			// Search in comments
+            if (suttaEn.comment) {
+                const extractedText = findSearchTermPassage(suttaEn.comment, searchTerm, false, options['strict']);
+                if (extractedText) {
+                    const commentNb = findCommentNb(suttaEn.comment, extractedText);
+                    if (commentNb) {
+                        const link = "https://suttas.hillsidehermitage.org/?q=" + suttaEn.id + "#comment" + commentNb;
+                        await addResultToDOMAsync(id, titleEn + " - Comments", extractedText, link);
+                        gotResults = true;
+                    }
+                }
+            }
+        }
+
+        if (options['pali']) {
+            const suttaPl = suttasPl[i];
+            const titlePl = availableSuttasJson[suttaPl.id]?.pali_title || "Unknown Title";
+            if (!idSet) id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
+
+			// Search in pali
+            const extractedText = findSearchTermPassage(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true);
+            if (extractedText) {
+                const range = findVerseRange(suttaPl.root_pli_ms, searchTerm, true);
+                if (range) {
+                    const link = "https://suttas.hillsidehermitage.org/?q=" + suttaPl.id + "#" + range;
+                    await addResultToDOMAsync(id, titlePl, extractedText, link);
+                    gotResults = true;
+                }
+            }
+        }
+    }
+
+    if (!gotResults) {
+        addResultToDOM("", "No results found", "No results were found with the expression '" + searchTerm + "'.", "none");
+    }
+}
+
+//REMOVE?
 async function searchSuttas(searchTerm, options) {
   searchTerm = cleanSearchTerm(searchTerm.toLowerCase());
   
@@ -434,23 +520,36 @@ function getConfiguration() {
 }
 
 let isSearching = false;
+let shouldStopSearch = false;
 
 async function startSearch() {
-    if (isSearching) return; // Prevent multiple simultaneous searches
-    isSearching = true; // Set the search flag
-    const searchButton = document.querySelector('#searchButton');
-    searchButton.disabled = true; // Disable the button
+  if (isSearching) return; // Prevents simultaneous searches
+  isSearching = true; // Marks the search as ongoing
+  shouldStopSearch = false; // Resets the stop marker
 
-    const query = document.querySelector('#searchInput').value;
-    const options = getConfiguration();
-    await searchSuttas(query, options); // Await the search to complete
+  const searchButton = document.querySelector('#searchButton');
+  searchButton.textContent = "Stop"; // Changes the button text
+  searchButton.classList.add("red"); // Adds the "red" class
 
-    searchButton.disabled = false; // Re-enable the button
-    isSearching = false; // Reset the flag
+  const query = document.querySelector('#searchInput').value;
+  const options = getConfiguration();
+
+  // Executes the search with stop check
+  await searchSuttasWithStop(query, options);
+
+  // Restores the button to its initial state
+  searchButton.textContent = "Search";
+  searchButton.classList.remove("red");
+  isSearching = false;
 }
 
+// Function to handle the search button click event
 document.querySelector('#searchButton').addEventListener('click', () => {
-    startSearch();
+  if (isSearching) {
+    shouldStopSearch = true; // Triggers the search stop
+  } else {
+    startSearch(); // Starts the search if it's not ongoing
+  }
 });
 
 const searchInput = document.getElementById('searchInput');
