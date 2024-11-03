@@ -24,9 +24,15 @@ h2, h3{
 	margin: 0 1rem;
 }
 
+#panelsContainer{
+	display: flex;
+	flex-direction: column;
+	min-height: 90vh;
+	padding: 0px 4px;
+}
+
 #searchContainer{
 	display: flex;
-	min-height: 90vh;
 }
 
 #optionPanel {
@@ -116,7 +122,7 @@ h2, h3{
 
 .content {
     flex: 1;
-    padding: 0 10px 10px;
+    padding-left: 10px;
 	min-width: 200px;
 }
 
@@ -178,10 +184,31 @@ b.dark{
 	color: var(--light-orange);
 }
 
+.loading-bar-container {
+    width: 100%;
+    position: relative;
+    height: .3rem;
+	background-color: var(--light-off-white);
+}
+
+.dark .loading-bar-container{
+	background-color: var(--darker-gray);
+}
+
+.loading-bar {
+    height: 100%;
+    width: 0;
+    background-color: #007bff;
+	background-image: linear-gradient(45deg, rgba(255, 255, 255, .15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%, transparent 75%, transparent);
+    background-size: 1rem 1rem;
+}
+
 @media (max-width: 768px) {
+	#panelsContainer{
+		padding: 3px;
+	}
 	#searchContainer{
 		flex-direction: column;
-		padding: 3px;
 	}
 	#optionPanel {
 		width: 100%;
