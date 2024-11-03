@@ -3,6 +3,7 @@
 // Refactorisation?
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
 // After X results, having a button next to stop button to load more?
+// Needs to get lettercase back on displayed passages
 
 import db from "./js/dexie/dexie.js";
 import {
@@ -13,6 +14,8 @@ const availableSuttasJson = await fetchAvailableSuttas();
 
 //Search suttas by search term and language options.
 async function searchSuttasWithStop(searchTerm, options) {
+	searchTerm = cleanSearchTerm(searchTerm.toLowerCase());
+	
 	const resultsDiv = document.querySelector('.results');
 	const loadingBar = document.getElementById('loadingBar');
 	resultsDiv.innerHTML = ''; // Clear previous results
@@ -52,8 +55,10 @@ async function searchSuttasWithStop(searchTerm, options) {
 
 			// Search in translation_en_anigha
 			const extractedText = findSearchTermPassage(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
+			console.log(extractedText);
 			if (extractedText) {
 				const range = findVerseRange(suttaEn.translation_en_anigha, searchTerm);
+				console.log(range);
 				if (range) {
 					const link = `https://suttas.hillsidehermitage.org/?q=${suttaEn.id}#${range}`;
 					await addResultToDOMAsync(id, titleEn, extractedText, link);
@@ -158,49 +163,58 @@ function removeDiacritics(str) {
 }
 
 function findVerseRange(textData, searchTerm, pali = false) {
-	let verseKeys = Object.keys(textData);
-	let currentLength = 0; // Tracks accumulated length
-	let startVerse = null;
-	let endVerse = null;
+  let verseKeys = Object.keys(textData);
+  let currentText = "";
+  let verseIndexMap = {};
 
-	// Optionally remove diacritics from the searchTerm if `pali` is true
-	if (pali) {
-		searchTerm = removeDiacritics(searchTerm);
-	}
-	const lowerSearchTerm = searchTerm.toLowerCase();
+  // If pali is true, remove diacritics from searchTerm
+  if (pali)
+    searchTerm = removeDiacritics(searchTerm);
 
-	for (let i = 0; i < verseKeys.length; i++) {
-		const verse = verseKeys[i];
-		let text = textData[verse];
+  // Creates an accumulated text and records the positions of each verse
+  for (let i = 0; i < verseKeys.length; i++) {
+    const verse = verseKeys[i];
+    let text = textData[verse];
 
-		// Remove diacritics if `pali` is true and convert to lowercase
-		if (pali) {
-			text = removeDiacritics(text);
-		}
-		text = text.toLowerCase();
+    // If pali is true, remove diacritics from text as well
+    if (pali) 
+      text = removeDiacritics(text);
 
-		// Search for the term in the current text segment
-		const startIndex = currentLength;
-		const endIndex = startIndex + text.length;
+    // Records the starting and ending index of each verse in the accumulated text
+    verseIndexMap[verse] = { start: currentText.length, end: currentText.length + text.length };
+    currentText += text.toLowerCase();
+  }
 
-		// Check if the search term starts within the current verse
-		const termStartInVerse = text.indexOf(lowerSearchTerm);
-		if (termStartInVerse !== -1) {
-			startVerse = startVerse || verse;
-			endVerse = verse; // Continuously update to capture the last match
-		}
+  // Searches for the starting and ending index of the searchTerm in the accumulated text
+  const startIndex = currentText.indexOf(searchTerm);
+  if (startIndex === -1) {
+    return null;
+  }
+  const endIndex = startIndex + searchTerm.length;
 
-		// If both start and end verses have been found, we can stop early
-		if (startVerse && endVerse) {
-			break;
-		}
+  // Identifies the starting and ending verses
+  let startVerse = null;
+  let endVerse = null;
 
-		// Accumulate length for next iteration
-		currentLength = endIndex;
-	}
+  for (let i = 0; i < verseKeys.length; i++) {
+    const verse = verseKeys[i];
+    const { start, end } = verseIndexMap[verse];
 
-	return startVerse && endVerse ? `${startVerse}-${endVerse}` : null;
+    // Finds the verse where the searchTerm starts
+    if (start <= startIndex && startIndex < end) {
+      startVerse = verse;
+    }
+
+    // Finds the verse where the searchTerm ends
+    if (start < endIndex && endIndex <= end) {
+      endVerse = verse;
+      break; // Stops the loop once the endVerse is found
+    }
+  }
+
+  return `${startVerse}-${endVerse}`;
 }
+
 
 /**
  * Finds a passage of text containing a search term within a set of data.
@@ -251,10 +265,11 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
 	const extractPassage = (words, startIdx, endIdx) => {
 		let passage = words.slice(startIdx, endIdx).join(" ");
 		passage = highlightText(passage);
-
+		
 		// Add ellipses at the start or end if not showing the entire text
 		if (startIdx > 0) passage = "[...] " + passage;
 		if (endIdx < words.length) passage += " [...]";
+		
 		return passage;
 	};
 
@@ -294,22 +309,25 @@ function findSearchTermPassage(textData, searchTerm, multipleVerse = true, stric
 		}
 		return null; // No match found in any verse
 	}
-
+	
 	// Concatenate all verses for multi-verse searching
-	const concatenatedText = verses.map(([, text]) => text.toLowerCase()).join(" ");
+	const concatenatedText = verses.map(([, text]) => text.toLowerCase()).join("");
+	
 	const searchIndex = concatenatedText.search(searchTermRegex);
+	
 	const searchTermLengthInWords = lowerCaseSearchTerm.split(" ").length;
-
+	
 	if (searchIndex === -1) return null; // No match in concatenated text
 
 	// Split concatenated text into words for passage extraction
 	const allWords = concatenatedText.split(" ");
+	
 	const termWordIndex = concatenatedText.slice(0, searchIndex).split(" ").length - 1;
-
+	
 	// Calculate start and end indices for extracting up to maxWords
 	let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - searchTermLengthInWords) / 2));
 	let endIdx = Math.min(allWords.length, startIdx + maxWords);
-
+	
 	return extractPassage(allWords, startIdx, endIdx);
 }
 
