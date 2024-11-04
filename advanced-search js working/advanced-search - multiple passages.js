@@ -4,7 +4,6 @@
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
 // After X results, having a button next to stop button to load more?
 // Still need to extract range in findSearchTermPassage
-// Still need to modify the pali processing part in searchSuttasWithStop
 // Need to add options for unique passage ou multiple passages
 // Set upper limit of 10 results per sutta
 // Issue with pali==true strict==true with searchTerm: ekaṁ samayaṁ bhagavā -> long dash makes first character to not get highlighted
