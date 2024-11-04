@@ -7,7 +7,7 @@
 // Need to add options for unique passage ou multiple passages
 // Set upper limit of 10 results per sutta
 // Issue with pali==true strict==true with searchTerm: ekaṁ samayaṁ bhagavā -> long dash makes first character to not get highlighted
-// Peut-être moyen d'extraire le verseRange avec findVerseRange en lui donnant le passage extrait moins les <b></b>[...] comme paramètre searchText?
+// Optimiser les 3 search en faisant une fonction commune
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
@@ -56,12 +56,12 @@ async function searchSuttasWithStop(searchTerm, options) {
 			let id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
 
 			// Search in translation_en_anigha
-			const resultsEn = findSearchTermPassages(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
+			const resultsEn = findSearchTermPassages(suttaEn.translation_en_anigha, searchTerm, true, options['strict'], false, id);
 			if (resultsEn) {
 				for(const key in resultsEn){
 					if (resultsEn.hasOwnProperty(key)) {
 						const extractedText = resultsEn[key].extractedText;
-						const range =  "1-1";//resultsEn[key].verseRange;
+						const range = resultsEn[key].verseRange;
 						console.log(range);
 						if (range) {
 							const link = `https://suttas.hillsidehermitage.org/?q=${suttaEn.id}#${range}`;
@@ -78,11 +78,11 @@ async function searchSuttasWithStop(searchTerm, options) {
 
 			// Search in comments
 			if (suttaEn.comment) {
-				const resultsCom = findSearchTermPassages(suttaEn.comment, searchTerm, false, options['strict']);
+				const resultsCom = findSearchTermPassages(suttaEn.comment, searchTerm, false, options['strict'], false, null);
 				if (resultsCom) {
 					for(const key in resultsCom){
 						if (resultsCom.hasOwnProperty(key)) {
-							const extractedComment = resultsCom[key].extractedComment
+							const extractedComment = resultsCom[key].extractedComment;
 							const commentNb = resultsCom[key].commentNb;
 							if (extractedComment && commentNb) {
 								const link = `https://suttas.hillsidehermitage.org/?q=${suttaEn.id}#comment${commentNb}`;
@@ -103,12 +103,12 @@ async function searchSuttasWithStop(searchTerm, options) {
 			const titlePl = availableSuttasJson[suttaPl.id]?.pali_title || "Unknown Title";
 			const id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
 
-			const resultsPl = findSearchTermPassages(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true);
+			const resultsPl = findSearchTermPassages(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true, id);
 			if (resultsPl) {
 				for(const key in resultsPl){
 					if (resultsPl.hasOwnProperty(key)) {
 						const extractedText = resultsPl[key].extractedText;
-						const range =  "1-1";//resultsPl[key].verseRange;
+						const range = resultsPl[key].verseRange;
 						console.log(range);
 						if (range) {
 							const link = `https://suttas.hillsidehermitage.org/?q=${suttaPl.id}#${range}`;
@@ -156,36 +156,59 @@ function removeDiacritics(str) {
 	return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-//Always return the first match in the textData
-function findVerseRange(textData, searchTerm, pali = false) {
-  let verseKeys = Object.keys(textData);
-  let currentText = "";
-  let verseIndexMap = {};
 
-  // If pali is true, remove diacritics from searchTerm
-  if (pali)
-    searchTerm = removeDiacritics(searchTerm);
 
-  // Creates an accumulated text and records the positions of each verse
-  for (let i = 0; i < verseKeys.length; i++) {
-    const verse = verseKeys[i];
-    let text = textData[verse];
+let verseIndexMap = {};
+let currentVerseText = "";
+let lastSuttaId = "";
+let verseKeys;
 
-    // If pali is true, remove diacritics from text as well
-    if (pali) 
-      text = removeDiacritics(text);
-
-    // Records the starting and ending index of each verse in the accumulated text
-    verseIndexMap[verse] = { start: currentText.length, end: currentText.length + text.length };
-    currentText += text.toLowerCase();
+// Index the sutta verses and return the verseRange of passage in textData
+// If called multiple times in a row for the same sutta, doesn't re-index the verses of the same sutta but use global vars above
+// Only re-index the next sutta
+function findVerseRange(suttaId, textData, passage, pali = false) {
+  passage = passage.toLowerCase();
+		  
+  let differentSutta = false;
+  
+  if (suttaId == null || (suttaId != null && lastSuttaId != suttaId)){
+	  lastSuttaId = suttaId;
+	  differentSutta = true;
   }
+  
+  // Index the sutta verses only if this is a new sutta
+  if (differentSutta){
+	  verseIndexMap = {}
+	  currentVerseText = "";
+	  
+	  verseKeys = Object.keys(textData);
+	  
+	  // If pali is true, remove diacritics from passage
+	  if (pali)
+		passage = removeDiacritics(passage);
 
-  // Searches for the starting and ending index of the searchTerm in the accumulated text
-  const startIndex = currentText.indexOf(searchTerm);
+	  // Creates an accumulated text and records the positions of each verse
+	  for (let i = 0; i < verseKeys.length; i++) {
+		const verse = verseKeys[i];
+		let text = textData[verse];
+
+		// If pali is true, remove diacritics from text as well
+		if (pali) 
+		  text = removeDiacritics(text);
+
+		// Records the starting and ending index of each verse in the accumulated text
+		verseIndexMap[verse] = { start: currentVerseText.length, end: currentVerseText.length + text.length };
+		currentVerseText += text.toLowerCase();
+	  }
+  }
+  
+  // Searches for the starting and ending index of the passage in the accumulated text
+  const startIndex = currentVerseText.indexOf(passage);
+  
   if (startIndex === -1) {
     return null;
   }
-  const endIndex = startIndex + searchTerm.length;
+  const endIndex = startIndex + passage.length;
 
   // Identifies the starting and ending verses
   let startVerse = null;
@@ -195,12 +218,12 @@ function findVerseRange(textData, searchTerm, pali = false) {
     const verse = verseKeys[i];
     const { start, end } = verseIndexMap[verse];
 
-    // Finds the verse where the searchTerm starts
+    // Finds the verse where the passage starts
     if (start <= startIndex && startIndex < end) {
       startVerse = verse;
     }
 
-    // Finds the verse where the searchTerm ends
+    // Finds the verse where the passage ends
     if (start < endIndex && endIndex <= end) {
       endVerse = verse;
       break; // Stops the loop once the endVerse is found
@@ -210,7 +233,7 @@ function findVerseRange(textData, searchTerm, pali = false) {
   return `${startVerse}-${endVerse}`;
 }
 
-function findSearchTermPassages(textData, searchTerm, multipleVerse = true, strict = false, pali = false) {
+function findSearchTermPassages(textData, searchTerm, multipleVerse = true, strict = false, pali = false, suttaId) {
 	const maxWords = 150;
 
 	// Remove diacritics if 'pali' is enabled
@@ -255,13 +278,15 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 		const adjustedMatchIndex = fullText.slice(0, matchIndex).split(" ").slice(startIdx).join(" ").length
 		+ (strict?1:0); //Fix offset with strict==true
 
+		const verseRange = findVerseRange(suttaId, textData, passage, pali);
+		
 		// Apply highlight to the specific match
 		passage = highlightSpecificMatch(passage, adjustedMatchIndex);
 
 		// Add ellipses at the start or end if not showing the entire text
 		if (startIdx > 0) passage = "[...] " + passage;
 		if (endIdx < words.length) passage += " [...]";
-		return passage;
+		return { passage: passage, verseRange: verseRange };
 	};
 
 	/**
@@ -292,14 +317,16 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 				endIdx = Math.min(endIdx, words.length);
 
 				// Extract passage and add to matches array
-				matches.push(extractPassage(words, startIdx, endIdx, matchIndex, verse));
+				const extracted = extractPassage(words, startIdx, endIdx, matchIndex, verse);
+				matches.push(extracted.passage);
 			} else {
 				// Calculate the start and end indices for extracting up to maxWords
 				let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - searchTermLengthInWords) / 2));
 				let endIdx = Math.min(words.length, startIdx + maxWords);
 
 				// Extract passage and add to matches array
-				matches.push(extractPassage(words, startIdx, endIdx, matchIndex, verse));
+				const extracted = extractPassage(words, startIdx, endIdx, matchIndex, verse);
+				matches.push(extracted.passage);
 			}
 		}
 
@@ -340,18 +367,20 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 
 				// Ensure endIdx does not exceed words length
 				endIdx = Math.min(endIdx, allWords.length);
-
+				
+				const extracted = extractPassage(allWords, startIdx, endIdx, match.index, concatenatedText);
 				results.push({
-					extractedText: extractPassage(allWords, startIdx, endIdx, match.index, concatenatedText),
-					verseRange: line
+					extractedText: extracted.passage,
+					verseRange: extracted.verseRange
 				});
 			} else {
 				let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - lowerCaseSearchTerm.split(" ").length) / 2));
 				let endIdx = Math.min(allWords.length, startIdx + maxWords);
 
+				const extracted = extractPassage(allWords, startIdx, endIdx, match.index, concatenatedText);
 				results.push({
-					extractedText: extractPassage(allWords, startIdx, endIdx, match.index, concatenatedText),
-					verseRange: line
+					extractedText: extracted.passage,
+					verseRange: extracted.verseRange
 				});
 			}
 		}
@@ -521,8 +550,6 @@ function findSearchTermPassages2(textData, searchTerm, multipleVerse = true, str
 	return results.length > 0 ? results : null;
 }
 
-
-
 function curateText(text) {
 	// Replace every multiples <br> and variantes by only one tag
 	text = text.replace(/<br\s*\/?>\s*(<br\s*\/?>\s*)+/gi, "<br/>");
@@ -655,7 +682,6 @@ document.querySelector('#searchButton').addEventListener('click', () => {
 });
 
 const searchInput = document.getElementById('searchInput');
-
 
 // Deactivate button if either search bar empty, no language selected or no books selected
 window.addEventListener("load", function() {
