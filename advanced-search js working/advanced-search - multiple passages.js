@@ -3,22 +3,18 @@
 // Refactorisation?
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
 // After X results, having a button next to stop button to load more?
-// Problème avec la forme du résultat de findSearchTermPassage, il renvoie {extractedComment, commentNb} tout le temps, au lieu de seulement quand recherche sur commentaire
 // Still need to extract range in findSearchTermPassage
 // Still need to modify the pali processing part in searchSuttasWithStop
-// Highlight issue with strict (last letter isn't comprised)
-// If searcmTerm.length > maxWords : Needs to display the whole searchTerm with textData lettercase and with ellipses
 // Need to add options for unique passage ou multiple passages
+// Set upper limit of 10 results per sutta
 
 import db from "./js/dexie/dexie.js";
-import {
-	fetchAvailableSuttas
-} from "./js/utils/loadContent/fetchAvailableSuttas.js";
-
-const availableSuttasJson = await fetchAvailableSuttas();
+import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
 
 //Search suttas by search term and language options.
 async function searchSuttasWithStop(searchTerm, options) {
+	const availableSuttasJson = await fetchAvailableSuttas();
+	
 	searchTerm = cleanSearchTerm(searchTerm.toLowerCase());
 
 	const resultsDiv = document.querySelector('.results');
@@ -59,12 +55,12 @@ async function searchSuttasWithStop(searchTerm, options) {
 			let id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
 
 			// Search in translation_en_anigha
-			const results = findSearchTermPassages(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
-			if (results) {
-				for(const key in results){
-					if (results.hasOwnProperty(key)) {
-						const extractedText = results[key].extractedComment;
-						const range =  "1-1";//results[key].verseRange;
+			const resultsEn = findSearchTermPassages(suttaEn.translation_en_anigha, searchTerm, true, options['strict']);
+			if (resultsEn) {
+				for(const key in resultsEn){
+					if (resultsEn.hasOwnProperty(key)) {
+						const extractedText = resultsEn[key].extractedText;
+						const range =  "1-1";//resultsEn[key].verseRange;
 						console.log(range);
 						if (range) {
 							const link = `https://suttas.hillsidehermitage.org/?q=${suttaEn.id}#${range}`;
@@ -81,12 +77,12 @@ async function searchSuttasWithStop(searchTerm, options) {
 
 			// Search in comments
 			if (suttaEn.comment) {
-				const results = findSearchTermPassages(suttaEn.comment, searchTerm, false, options['strict']);
-				if (results) {
-					for(const key in results){
-						if (results.hasOwnProperty(key)) {
-							const extractedComment = results[key].extractedComment
-							const commentNb = results[key].commentNb;
+				const resultsCom = findSearchTermPassages(suttaEn.comment, searchTerm, false, options['strict']);
+				if (resultsCom) {
+					for(const key in resultsCom){
+						if (resultsCom.hasOwnProperty(key)) {
+							const extractedComment = resultsCom[key].extractedComment
+							const commentNb = resultsCom[key].commentNb;
 							if (extractedComment && commentNb) {
 								const link = `https://suttas.hillsidehermitage.org/?q=${suttaEn.id}#comment${commentNb}`;
 								await addResultToDOMAsync(id, titleEn + " - Comments", extractedComment, link);
@@ -106,17 +102,25 @@ async function searchSuttasWithStop(searchTerm, options) {
 			const titlePl = availableSuttasJson[suttaPl.id]?.pali_title || "Unknown Title";
 			const id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
 
-			const extractedText = findSearchTermPassage(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true);
-			if (extractedText) {
-				const range = findVerseRange(suttaPl.root_pli_ms, searchTerm, true);
-				if (range) {
-					const link = `https://suttas.hillsidehermitage.org/?q=${suttaPl.id}#${range}`;
-					await addResultToDOMAsync(id, titlePl, extractedText, link);
-					gotResults = true;
+			const resultsPl = findSearchTermPassages(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true);
+			if (resultsPl) {
+				for(const key in resultsPl){
+					if (resultsPl.hasOwnProperty(key)) {
+						const extractedText = resultsPl[key].extractedText;
+						const range =  "1-1";//resultsPl[key].verseRange;
+						console.log(range);
+						if (range) {
+							const link = `https://suttas.hillsidehermitage.org/?q=${suttaPl.id}#${range}`;
+							await addResultToDOMAsync(id, titlePl, extractedText, link);
+							gotResults = true;
+						}
+					}
 				}
 			}
 			currentIteration++;
-			loadingBar.style.width = `${(currentIteration / totalIterations) * 100}%`;
+			setTimeout(() => {
+				loadingBar.style.width = `${(currentIteration / totalIterations) * 100}%`; // Update loading bar
+			}, 0);
 		}
 	}
 
@@ -128,31 +132,6 @@ async function searchSuttasWithStop(searchTerm, options) {
 		// Reset loading bar after search is complete
 		loadingBar.style.width = '0%';
 	}, 0);
-}
-
-// TO REMOVE
-// Search extractedText (without the added <b></b> and [...]) in each comments to find the position of the matching comment
-function findCommentNb(commentData, extractedText) {
-	// Removes <b></b> and [...]
-	const sanitizedExtractedText = extractedText.replace(/<b>|<\/b>| \[\.\.\.\]|\[\.\.\.\] /g, "").toLowerCase();
-	const result = [];
-	let line = 1;
-
-	for (const [key, value] of Object.entries(commentData)) {
-		// Ignore empty lines
-		if (value === "") continue;
-
-		const sanitizedValue = curateText(value).toLowerCase();
-
-		// Compare extractedText with comment line
-		if (sanitizedValue.includes(sanitizedExtractedText)) {
-			return line;
-		}
-
-		line++;
-	}
-
-	return null;
 }
 
 // Makes sure that the sentence has the correct format and fits on one line only
@@ -273,7 +252,8 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 	const extractPassage = (words, startIdx, endIdx, matchIndex, fullText) => {
 		let passage = words.slice(startIdx, endIdx).join(" ");
 		// Calculate the adjusted matchIndex for the extracted passage
-		const adjustedMatchIndex = fullText.slice(0, matchIndex).split(" ").slice(startIdx).join(" ").length;
+		const adjustedMatchIndex = fullText.slice(0, matchIndex).split(" ").slice(startIdx).join(" ").length 
+		+ (strict?1:0); //fix offset when using strict
 
 		// Apply highlight to the specific match
 		passage = highlightSpecificMatch(passage, adjustedMatchIndex);
@@ -302,12 +282,25 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 			const termWordIndex = verse.slice(0, matchIndex).split(" ").length - 1;
 			const searchTermLengthInWords = lowerCaseSearchTerm.split(" ").length;
 
-			// Calculate the start and end indices for extracting up to maxWords
-			let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - searchTermLengthInWords) / 2));
-			let endIdx = Math.min(words.length, startIdx + maxWords);
+			// Check if searchTerm length exceeds maxWords
+			if (searchTermLengthInWords > maxWords) {
+				// Set start and end indices based on the match position
+				let startIdx = termWordIndex;
+				let endIdx = termWordIndex + searchTermLengthInWords;
 
-			// Extract passage and add to matches array
-			matches.push(extractPassage(words, startIdx, endIdx, matchIndex, verse));
+				// Ensure endIdx does not exceed words length
+				endIdx = Math.min(endIdx, words.length);
+
+				// Extract passage and add to matches array
+				matches.push(extractPassage(words, startIdx, endIdx, matchIndex, verse));
+			} else {
+				// Calculate the start and end indices for extracting up to maxWords
+				let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - searchTermLengthInWords) / 2));
+				let endIdx = Math.min(words.length, startIdx + maxWords);
+
+				// Extract passage and add to matches array
+				matches.push(extractPassage(words, startIdx, endIdx, matchIndex, verse));
+			}
 		}
 
 		return matches.length > 0 ? matches : null;
@@ -339,18 +332,35 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 			const allWords = concatenatedText.split(" ");
 			const termWordIndex = concatenatedText.slice(0, matchIndex).split(" ").length - 1;
 
-			let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - lowerCaseSearchTerm.split(" ").length) / 2));
-			let endIdx = Math.min(allWords.length, startIdx + maxWords);
+			// Check if searchTerm length exceeds maxWords
+			if (lowerCaseSearchTerm.split(" ").length > maxWords) {
+				// Set start and end indices based on the match position
+				let startIdx = termWordIndex;
+				let endIdx = termWordIndex + lowerCaseSearchTerm.split(" ").length;
 
-			results.push({
-				extractedComment: extractPassage(allWords, startIdx, endIdx, match.index, concatenatedText),
-				commentNb: line
-			});
+				// Ensure endIdx does not exceed words length
+				endIdx = Math.min(endIdx, allWords.length);
+
+				results.push({
+					extractedText: extractPassage(allWords, startIdx, endIdx, match.index, concatenatedText),
+					verseRange: line
+				});
+			} else {
+				let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - lowerCaseSearchTerm.split(" ").length) / 2));
+				let endIdx = Math.min(allWords.length, startIdx + maxWords);
+
+				results.push({
+					extractedText: extractPassage(allWords, startIdx, endIdx, match.index, concatenatedText),
+					verseRange: line
+				});
+			}
 		}
 	}
 
 	return results.length > 0 ? results : null;
 }
+
+
 
 function curateText(text) {
 	// Replace every multiples <br> and variantes by only one tag
@@ -485,6 +495,7 @@ document.querySelector('#searchButton').addEventListener('click', () => {
 
 const searchInput = document.getElementById('searchInput');
 
+
 // Deactivate button if either search bar empty, no language selected or no books selected
 window.addEventListener("load", function() {
 	const searchInput = document.getElementById("searchInput");
@@ -519,11 +530,11 @@ window.addEventListener("load", function() {
 	// Enter key works on the entire page and not just when focused on the search box, so we can just change an option and restart the search without having to click in the search box
 	document.addEventListener('keydown', function(event) {
 		if (event.key === 'Enter') {
-			// Empêche de lancer la recherche si le bouton est désactivé
+			// Prevents starting search if searchButton disabled
 			if (!searchButton.disabled) {
-				startSearch(); // Appelle la fonction pour démarrer la recherche
+				startSearch();
 			}
-			event.preventDefault(); // Empêche le comportement par défaut
+			event.preventDefault();
 		}
 	});
 });
