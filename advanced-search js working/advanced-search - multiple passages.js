@@ -2,11 +2,9 @@
 // Could be even more accurate in terms of the number of words it returns if we added other punctuation symbols to separate words
 // Refactorisation?
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
-// Still need to extract range in findSearchTermPassage
+// Still need to extract range in findSearchTermPassage instead of findVerseRange, any way to combine the two?
 // Need to add options for unique passage ou multiple passages
-// Set upper limit of 10 results per sutta
 // Issue with pali==true strict==true with searchTerm: ekaṁ samayaṁ bhagavā -> long dash makes first character to not get highlighted
-// Peut-être moyen d'extraire le verseRange avec findVerseRange en lui donnant le passage extrait moins les <b></b>[...] comme paramètre searchText?
 // Optimiser les 3 search en faisant une fonction commune
 
 import db from "./js/dexie/dexie.js";
@@ -155,8 +153,6 @@ function cleanSearchTerm(inputText) {
 function removeDiacritics(str) {
 	return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
-
-
 
 let verseIndexMap = {};
 let currentVerseText = "";
@@ -351,8 +347,11 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 	} else {
 		const concatenatedText = verses.map(([, text]) => text).join("");
 		let match;
-
+		let cpt = 1;
+		
 		while ((match = searchTermRegex.exec(concatenatedText.toLowerCase())) !== null) {
+			if (cpt > 10) break;
+			
 			const matchIndex = match.index;
 
 			// Split concatenated text into words for passage extraction
@@ -383,12 +382,13 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 					verseRange: extracted.verseRange
 				});
 			}
+			
+			cpt++;
 		}
 	}
 
 	return results.length > 0 ? results : null;
 }
-
 
 /**
  * Finds a passage of text containing a search term within a set of data.
