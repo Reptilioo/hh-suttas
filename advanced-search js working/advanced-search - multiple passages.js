@@ -54,7 +54,7 @@ async function searchSuttasWithStop(searchTerm, options) {
 			let id = availableSuttasJson[suttaEn.id]?.id || suttaEn.id.toUpperCase();
 
 			// Search in translation_en_anigha
-			const resultsEn = findSearchTermPassages(suttaEn.translation_en_anigha, searchTerm, true, options['strict'], false, id);
+			const resultsEn = findSearchTermPassages(suttaEn.translation_en_anigha, searchTerm, true, options['strict'], false, id, options['single']);
 			if (resultsEn) {
 				for(const key in resultsEn){
 					if (resultsEn.hasOwnProperty(key)) {
@@ -76,7 +76,7 @@ async function searchSuttasWithStop(searchTerm, options) {
 
 			// Search in comments
 			if (suttaEn.comment) {
-				const resultsCom = findSearchTermPassages(suttaEn.comment, searchTerm, false, options['strict'], false, null);
+				const resultsCom = findSearchTermPassages(suttaEn.comment, searchTerm, false, options['strict'], false, null, options['single']);
 				if (resultsCom) {
 					for(const key in resultsCom){
 						if (resultsCom.hasOwnProperty(key)) {
@@ -101,7 +101,7 @@ async function searchSuttasWithStop(searchTerm, options) {
 			const titlePl = availableSuttasJson[suttaPl.id]?.pali_title || "Unknown Title";
 			const id = availableSuttasJson[suttaPl.id]?.id || suttaPl.id.toUpperCase();
 
-			const resultsPl = findSearchTermPassages(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true, id);
+			const resultsPl = findSearchTermPassages(suttaPl.root_pli_ms, searchTerm, true, options['strict'], true, id, options['single']);
 			if (resultsPl) {
 				for(const key in resultsPl){
 					if (resultsPl.hasOwnProperty(key)) {
@@ -229,7 +229,7 @@ function findVerseRange(suttaId, textData, passage, pali = false) {
   return `${startVerse}-${endVerse}`;
 }
 
-function findSearchTermPassages(textData, searchTerm, multipleVerse = true, strict = false, pali = false, suttaId) {
+function findSearchTermPassages(textData, searchTerm, multipleVerse = true, strict = false, pali = false, suttaId, singleResult) {
 	const maxWords = 150;
 
 	// Remove diacritics if 'pali' is enabled
@@ -337,10 +337,16 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 		for (const [, verse] of verses) {
 			const passages = findInSingleVerse(verse);
 			if (passages) {
-				results.push(...passages.map(passage => ({
-					extractedComment: passage,
-					commentNb: line
-				})));
+				if (singleResult)
+					results.push({
+						extractedComment: passages[0], // Premier passage seulement
+						commentNb: line
+					});
+				else
+					results.push(...passages.map(passage => ({
+						extractedComment: passage,
+						commentNb: line
+					})));
 			}
 			if (verse != "") line++;
 		}
@@ -382,6 +388,8 @@ function findSearchTermPassages(textData, searchTerm, multipleVerse = true, stri
 					verseRange: extracted.verseRange
 				});
 			}
+			
+			if (singleResult && cpt > 1) break;
 			
 			cpt++;
 		}
