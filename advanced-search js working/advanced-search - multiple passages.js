@@ -7,6 +7,7 @@
 // Still need to modify the pali processing part in searchSuttasWithStop
 // Need to add options for unique passage ou multiple passages
 // Set upper limit of 10 results per sutta
+// Issue with pali==true strict==true with searchTerm: ekaṁ samayaṁ bhagavā -> long dash makes first character to not get highlighted
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
@@ -200,6 +201,158 @@ function findVerseRange(textData, searchText, pali = false) {
 	return startVerse && endVerse ? `${startVerse}-${endVerse}` : null;
 }
 
+
+function findSearchTermPassages(textData, searchTerm, multipleVerse = true, strict = false, pali = false) {
+	const maxWords = 150;
+
+	// Remove diacritics if 'pali' is enabled
+	if (pali) searchTerm = removeDiacritics(searchTerm);
+
+	// Create search term regex based on strict mode
+	const lowerCaseSearchTerm = searchTerm.toLowerCase();
+	const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const searchTermRegex = new RegExp(
+		strict ? `(^|\\s|[.,!?\\(\\)]|\\b)(${escapeRegex(lowerCaseSearchTerm)})(?=\\s|[.,!?\\(\\)]|\\b|$)` : `(${escapeRegex(lowerCaseSearchTerm)})`,
+		"gi"
+	);
+	
+	// Convert textData into an array of verses with optional diacritic removal
+	const verses = Object.entries(textData).map(([key, verse]) => [
+		key, pali ? removeDiacritics(curateText(verse)) : curateText(verse)
+	]);
+
+	/**
+	 * Highlights a specific instance of the search term in a given text.
+	 * @param {string} text - Text in which to highlight the search term
+	 * @param {number} matchIndex - Index of the match to highlight
+	 * @returns {string} - Text with only the specific search term instance highlighted
+	 */
+	const highlightSpecificMatch = (text, matchIndex) => {
+		return text.slice(0, matchIndex) +
+			"<b>" + text.slice(matchIndex, matchIndex + searchTerm.length) + "</b>" +
+			text.slice(matchIndex + searchTerm.length);
+	};
+
+	/**
+	 * Extracts a passage around the specific match index with optional ellipses.
+	 * @param {string[]} words - Array of words to extract from
+	 * @param {number} startIdx - Starting index for extraction
+	 * @param {number} endIdx - Ending index for extraction
+	 * @param {number} matchIndex - Index of the specific match in the full text
+	 * @returns {string} - Final extracted passage with highlight and ellipses
+	 */
+	const extractPassage = (words, startIdx, endIdx, matchIndex, fullText) => {
+		let passage = words.slice(startIdx, endIdx).join(" ");
+		// Calculate the adjusted matchIndex for the extracted passage
+		const adjustedMatchIndex = fullText.slice(0, matchIndex).split(" ").slice(startIdx).join(" ").length
+		+ (strict?1:0); //Fix offset with strict==true
+
+		// Apply highlight to the specific match
+		passage = highlightSpecificMatch(passage, adjustedMatchIndex);
+
+		// Add ellipses at the start or end if not showing the entire text
+		if (startIdx > 0) passage = "[...] " + passage;
+		if (endIdx < words.length) passage += " [...]";
+		return passage;
+	};
+
+	/**
+	 * Searches a single verse and extracts passages around each occurrence of the search term.
+	 * @param {string} verse - The text of the verse to search
+	 * @returns {Array} - Array of extracted passages with each unique match highlighted
+	 */
+	const findInSingleVerse = (verse) => {
+		const matches = [];
+		let match;
+
+		// Find all matches of searchTerm in the verse
+		while ((match = searchTermRegex.exec(verse.toLowerCase())) !== null) {
+			const matchIndex = match.index;
+
+			// Split into words for easy passage extraction
+			const words = verse.split(" ");
+			const termWordIndex = verse.slice(0, matchIndex).split(" ").length - 1;
+			const searchTermLengthInWords = lowerCaseSearchTerm.split(" ").length;
+
+			// Check if searchTerm length exceeds maxWords
+			if (searchTermLengthInWords > maxWords) {
+				// Set start and end indices based on the match position
+				let startIdx = termWordIndex;
+				let endIdx = termWordIndex + searchTermLengthInWords;
+
+				// Ensure endIdx does not exceed words length
+				endIdx = Math.min(endIdx, words.length);
+
+				// Extract passage and add to matches array
+				matches.push(extractPassage(words, startIdx, endIdx, matchIndex, verse));
+			} else {
+				// Calculate the start and end indices for extracting up to maxWords
+				let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - searchTermLengthInWords) / 2));
+				let endIdx = Math.min(words.length, startIdx + maxWords);
+
+				// Extract passage and add to matches array
+				matches.push(extractPassage(words, startIdx, endIdx, matchIndex, verse));
+			}
+		}
+
+		return matches.length > 0 ? matches : null;
+	};
+
+	// Collect all passages with matches across verses
+	const results = [];
+	let line = 1;
+
+	if (!multipleVerse) {
+		for (const [, verse] of verses) {
+			const passages = findInSingleVerse(verse);
+			if (passages) {
+				results.push(...passages.map(passage => ({
+					extractedComment: passage,
+					commentNb: line
+				})));
+			}
+			if (verse != "") line++;
+		}
+	} else {
+		const concatenatedText = verses.map(([, text]) => text).join("");
+		let match;
+
+		while ((match = searchTermRegex.exec(concatenatedText.toLowerCase())) !== null) {
+			const matchIndex = match.index;
+
+			// Split concatenated text into words for passage extraction
+			const allWords = concatenatedText.split(" ");
+			const termWordIndex = concatenatedText.slice(0, matchIndex).split(" ").length - 1;
+
+			// Check if searchTerm length exceeds maxWords
+			if (lowerCaseSearchTerm.split(" ").length > maxWords) {
+				// Set start and end indices based on the match position
+				let startIdx = termWordIndex;
+				let endIdx = termWordIndex + lowerCaseSearchTerm.split(" ").length;
+
+				// Ensure endIdx does not exceed words length
+				endIdx = Math.min(endIdx, allWords.length);
+
+				results.push({
+					extractedText: extractPassage(allWords, startIdx, endIdx, match.index, concatenatedText),
+					verseRange: line
+				});
+			} else {
+				let startIdx = Math.max(0, termWordIndex - Math.floor((maxWords - lowerCaseSearchTerm.split(" ").length) / 2));
+				let endIdx = Math.min(allWords.length, startIdx + maxWords);
+
+				results.push({
+					extractedText: extractPassage(allWords, startIdx, endIdx, match.index, concatenatedText),
+					verseRange: line
+				});
+			}
+		}
+	}
+
+	return results.length > 0 ? results : null;
+}
+
+
 /**
  * Finds a passage of text containing a search term within a set of data.
  * 
@@ -210,7 +363,7 @@ function findVerseRange(textData, searchText, pali = false) {
  * @param {boolean} [pali=false] - If true, ignore diacritics in both searchTerm and textData.
  * @returns {string|null} The extracted passage of text containing the search term, or null if the term is not found.
  */
-function findSearchTermPassages(textData, searchTerm, multipleVerse = true, strict = false, pali = false) {
+function findSearchTermPassages2(textData, searchTerm, multipleVerse = true, strict = false, pali = false) {
 	const maxWords = 150;
 
 	// Remove diacritics if 'pali' is enabled
