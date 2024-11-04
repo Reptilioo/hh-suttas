@@ -9,10 +9,10 @@ import {
 	fetchAvailableSuttas
 } from "./js/utils/loadContent/fetchAvailableSuttas.js";
 
-const availableSuttasJson = await fetchAvailableSuttas();
-
 //Search suttas by search term and language options.
 async function searchSuttasWithStop(searchTerm, options) {
+	const availableSuttasJson = await fetchAvailableSuttas();
+	
 	searchTerm = cleanSearchTerm(searchTerm.toLowerCase());
 
 	const resultsDiv = document.querySelector('.results');
