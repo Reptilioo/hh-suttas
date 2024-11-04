@@ -2,11 +2,11 @@
 // Could be even more accurate in terms of the number of words it returns if we added other punctuation symbols to separate words
 // Refactorisation?
 // Add no diacritics for pali search - DONE but still need to find a way to display pali with diacritics and with searchTerm highlighted
-// After X results, having a button next to stop button to load more?
 // Still need to extract range in findSearchTermPassage
 // Need to add options for unique passage ou multiple passages
 // Set upper limit of 10 results per sutta
 // Issue with pali==true strict==true with searchTerm: ekaṁ samayaṁ bhagavā -> long dash makes first character to not get highlighted
+// Peut-être moyen d'extraire le verseRange avec findVerseRange en lui donnant le passage extrait moins les <b></b>[...] comme paramètre searchText?
 // Optimiser les 3 search en faisant une fonction commune
 
 import db from "./js/dexie/dexie.js";
