@@ -23,6 +23,21 @@ async function searchSuttasWithStop(searchTerm, options) {
     let currentIteration = 0;
     let gotResults = false;
 
+    const checkStrictMatch = (text, searchTerm) => {
+        const wordBoundaryRegex = /[\s.,!?;"')\]}\-:/]+/;
+        const words = text.toLowerCase().split(wordBoundaryRegex);
+        return words.includes(searchTerm);
+    };
+
+    const checkTitleMatch = (text, searchTerm, strict) => {
+        if (!text) return false;
+        text = text.toLowerCase();
+        if (strict) {
+            return checkStrictMatch(text, searchTerm);
+        }
+        return text.includes(searchTerm);
+    };
+
     const searchAndAddResults = async (suttas, lang) => {
         for (const sutta of suttas) {
             if (shouldStopSearch) {
@@ -30,37 +45,92 @@ async function searchSuttasWithStop(searchTerm, options) {
                 return;
             }
 
-            const { id, title } = getIdAndTitle(sutta, availableSuttasJson, lang);
+            const { id, title, heading } = getIdAndTitle(sutta, availableSuttasJson, lang);
+            let titleMatch = false;
+            let displayTitle = title;
 
-            const searchInContent = async (content, displayTitle, isPali = false) => {
-                const resultCallback = async (result) => {
-                    if (result) {
-                        const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}#${result.commentNb ? `comment${result.commentNb}` : result.verseRange}`;
-                        await addResultToDOMAsync(id, displayTitle, result.passage, link);
-                        gotResults = true;
+            // Check if searchTerm matches title/heading/pali_title using same strict/non-strict logic as content
+            if (lang === 'en') {
+                if (checkTitleMatch(title, searchTerm, options['strict']) || 
+                    checkTitleMatch(heading, searchTerm, options['strict'])) {
+                    titleMatch = true;
+                    displayTitle = highlightSearchTerm(title, searchTerm);
+                    if (heading) {
+                        displayTitle += ` (${highlightSearchTerm(heading, searchTerm)})`;
                     }
-                };
+                }
+            } else if (lang === 'pl') {
+                if (checkTitleMatch(title, searchTerm, options['strict'])) {
+                    titleMatch = true;
+                    displayTitle = highlightSearchTerm(title, searchTerm);
+                }
+            }
 
-                await searchSutta(
+            const searchInContent = async (content, isComments = false) => {
+                const results = await searchSutta(
                     content, 
                     searchTerm, 
-                    lang === 'en' && displayTitle.includes('Comments'), 
+                    isComments, 
                     options['strict'], 
-                    isPali, 
-                    options['single'],
-                    resultCallback
+                    lang === 'pl', 
+                    options['single']
                 );
+
+                return results;
             };
 
             if (lang === 'en') {
-                await searchInContent(sutta.translation_en_anigha, title);
+                // Search in main content and comments
+                const mainResults = await searchInContent(sutta.translation_en_anigha);
+                let commentResults = [];
                 if (sutta.comment) {
-                    await searchInContent(sutta.comment, `${title} - Comments`);
+                    commentResults = await searchInContent(sutta.comment, true);
                     currentIteration++;
                     loadingBar.style.width = `${(currentIteration / totalIterations) * 100}%`;
                 }
+
+                // If we found matches in content or comments
+                if (mainResults.length > 0 || commentResults.length > 0) {
+                    // Add main content results with highlighted title if there was a title match
+                    for (const result of mainResults) {
+                        const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}#${result.verseRange}`;
+                        await addResultToDOMAsync(id, titleMatch ? displayTitle : title, result.passage, link);
+                        gotResults = true;
+                    }
+                    // Add comment results
+                    for (const result of commentResults) {
+                        const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}#comment${result.commentNb}`;
+                        await addResultToDOMAsync(id, `${titleMatch ? displayTitle : title} - Comments`, result.passage, link);
+                        gotResults = true;
+                    }
+                } 
+                // If no content matches but title matches
+                else if (titleMatch) {
+                    const firstPassage = getFirstPassage(sutta.translation_en_anigha, 150);
+                    const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}`;
+                    await addResultToDOMAsync(id, displayTitle, firstPassage, link);
+                    gotResults = true;
+                }
             } else if (lang === 'pl') {
-                await searchInContent(sutta.root_pli_ms, title, true);
+                // Search in Pali content
+                const results = await searchInContent(sutta.root_pli_ms);
+
+                // If we found matches in content
+                if (results.length > 0) {
+                    // Add results with highlighted title if there was a title match
+                    for (const result of results) {
+                        const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}#${result.verseRange}`;
+                        await addResultToDOMAsync(id, titleMatch ? displayTitle : title, result.passage, link);
+                        gotResults = true;
+                    }
+                }
+                // If no content matches but title matches
+                else if (titleMatch) {
+                    const firstPassage = getFirstPassage(sutta.root_pli_ms, 100);
+                    const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}`;
+                    await addResultToDOMAsync(id, displayTitle, firstPassage, link);
+                    gotResults = true;
+                }
             }
             
             currentIteration++;
@@ -80,13 +150,47 @@ async function searchSuttasWithStop(searchTerm, options) {
     loadingBar.style.width = '0%';
 }
 
-// Helper function to get ID and title
+// Helper function to get ID, title and heading
 function getIdAndTitle(sutta, availableSuttasJson, lang) {
-  const availableSutta = availableSuttasJson[sutta.id] || {};
-  return {
-    id: availableSutta.id || sutta.id.toUpperCase(),
-    title: lang === 'en' ? availableSutta.title : availableSutta.pali_title || "Unknown Title"
-  };
+    const availableSutta = availableSuttasJson[sutta.id] || {};
+    return {
+        id: availableSutta.id || sutta.id.toUpperCase(),
+        title: lang === 'en' ? availableSutta.title : availableSutta.pali_title || "Unknown Title",
+        heading: availableSutta.heading || ""
+    };
+}
+
+
+// Helper function to highlight search term in text
+function highlightSearchTerm(text, searchTerm) {
+    const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
+    return text.replace(regex, '<b>$1</b>');
+}
+
+
+// Helper function to get first N words of content
+function getFirstPassage(content, wordCount) {
+    let text = '';
+    let totalWords = 0;
+    
+    // Iterate through verses until we have enough words
+    for (const verse of Object.values(content)) {
+        const cleanedVerse = cleanVerse(verse);
+        const words = cleanedVerse.split(/\s+/);
+        
+        if (totalWords + words.length <= wordCount) {
+            text += cleanedVerse + ' ';
+            totalWords += words.length;
+        } else {
+            // Add remaining words to reach exactly wordCount
+            const remainingWords = wordCount - totalWords;
+            text += words.slice(0, remainingWords).join(' ');
+            text += ' [...]';
+            break;
+        }
+    }
+    
+    return text.trim();
 }
 
 // Makes sure that the sentence has the correct format and fits on one line only
@@ -160,9 +264,9 @@ function addResultToDOM(id, title, snippet, link) {
 
 	const titleElement = document.createElement('h3');
 	if (id)
-		titleElement.textContent = `${id} - ${title}`;
+		titleElement.innerHTML = `${id} - ${title}`;
 	else
-		titleElement.textContent = title;
+		titleElement.innerHTML = title;
 
 	const preview = document.createElement('p');
 	preview.innerHTML = snippet;
@@ -214,9 +318,6 @@ async function startSearch() {
 	searchButton.classList.remove("red");
 	isSearching = false;
 }
-
-
-
 
 // Utility functions for text processing
 const removeDiacritics = (text) => {
@@ -637,9 +738,6 @@ const searchSutta = async (textData, searchTerm, isComment = false, strict = fal
 };
 
 export default searchSutta;
-
-
-
 
 // Function to handle the search button click event
 document.querySelector('#searchButton').addEventListener('click', () => {
