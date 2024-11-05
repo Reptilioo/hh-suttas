@@ -363,108 +363,108 @@ class SuttaSearch {
 	}
 	
     getPassage(startPos, endPos, matchStart, matchEnd, isComment = false) {
-    // Find initial word boundaries
-    let passageStart = this.findWordBoundary(this.fullText, startPos, 'backward');
-    let passageEnd = this.findWordBoundary(this.fullText, endPos, 'forward');
-
-    // For comments, ensure we stay within verse boundaries
-    if (isComment) {
-        // Find the verse that contains the start position
-        let currentVerseStart = 0;
-        let currentVerseKey = '';
-
-        for (const [pos, key] of this.versePositions.entries()) {
-            if (pos <= startPos) {
-                currentVerseStart = pos;
-                currentVerseKey = key;
-            } else {
-                break;
-            }
-        }
-
-        const currentVerseEnd = currentVerseStart + this.cleanedVerses.get(currentVerseKey).length;
-
-        // If the match crosses verse boundaries, adjust to stay within current verse
-        if (endPos > currentVerseEnd) {
-            passageEnd = currentVerseEnd;
-        }
-
-        // Ensure we include the full match
-        passageStart = Math.min(passageStart, matchStart);
-        passageEnd = Math.max(passageEnd, matchEnd);
-
-        // Then adjust to word boundaries within the verse
-        if (passageStart < currentVerseStart) {
-            passageStart = currentVerseStart;
-        }
-        if (passageEnd > currentVerseEnd) {
-            passageEnd = currentVerseEnd;
-        }
-    }
-
-    // Ensure we have valid passage boundaries
-    if (passageEnd <= passageStart) {
-        passageEnd = matchEnd + 1;  // Ensure we at least include the match
-    }
-
-    let passage = this.fullText.substring(passageStart, passageEnd);
-
-    // If passage is empty or only whitespace, expand it
-    if (!passage.trim()) {
-        passageStart = Math.max(0, matchStart - 50);  // Take 50 chars before match
-        passageEnd = Math.min(this.fullText.length, matchEnd + 50);  // and 50 after
-        passage = this.fullText.substring(passageStart, passageEnd);
-    }
-
-    // Handle ellipses
-    let prefix = '';
-    let suffix = '';
-
-    if (isComment) {
-        // Find verse boundaries for ellipsis determination
-        let currentVerseStart = 0;
-        let currentVerseKey = '';
-        
-        for (const [pos, key] of this.versePositions.entries()) {
-            if (pos <= passageStart) {
-                currentVerseStart = pos;
-                currentVerseKey = key;
-            } else {
-                break;
-            }
-        }
-        
-        const currentVerseEnd = currentVerseStart + this.cleanedVerses.get(currentVerseKey).length;
-
-        // Only add ellipses if there's actually text before/after in the verse
-        const textBefore = this.fullText.substring(currentVerseStart, passageStart).trim();
-        const textAfter = this.fullText.substring(passageEnd, currentVerseEnd).trim();
-        
-        prefix = passageStart > currentVerseStart && textBefore !== '' ? '[...] ' : '';
-        suffix = passageEnd < currentVerseEnd && textAfter !== '' ? ' [...]' : '';
-    } else {
-        prefix = passageStart > 0 ? '[...] ' : '';
-        suffix = passageEnd < this.fullText.length ? ' [...]' : '';
-    }
-
-    // Adjust match positions relative to passage
-    const relativeMatchStart = matchStart - passageStart;
-    const relativeMatchEnd = matchEnd - passageStart;
-
-    // Split passage into three parts and add highlighting
-    const beforeMatch = passage.substring(0, relativeMatchStart);
-    const match = passage.substring(relativeMatchStart, relativeMatchEnd);
-    const afterMatch = passage.substring(relativeMatchEnd);
-
-    passage = prefix + beforeMatch + '<b>' + match + '</b>' + afterMatch + suffix;
-
-    // Clean verse if in comment mode
-    if (isComment) {
-        passage = cleanVerse(passage);
-    }
-
-    return passage;
-}
+	    // Find initial word boundaries
+	    let passageStart = this.findWordBoundary(this.fullText, startPos, 'backward');
+	    let passageEnd = this.findWordBoundary(this.fullText, endPos, 'forward');
+	
+	    // For comments, ensure we stay within verse boundaries
+	    if (isComment) {
+	        // Find the verse that contains the start position
+	        let currentVerseStart = 0;
+	        let currentVerseKey = '';
+	
+	        for (const [pos, key] of this.versePositions.entries()) {
+	            if (pos <= startPos) {
+	                currentVerseStart = pos;
+	                currentVerseKey = key;
+	            } else {
+	                break;
+	            }
+	        }
+	
+	        const currentVerseEnd = currentVerseStart + this.cleanedVerses.get(currentVerseKey).length;
+	
+	        // If the match crosses verse boundaries, adjust to stay within current verse
+	        if (endPos > currentVerseEnd) {
+	            passageEnd = currentVerseEnd;
+	        }
+	
+	        // Ensure we include the full match
+	        passageStart = Math.min(passageStart, matchStart);
+	        passageEnd = Math.max(passageEnd, matchEnd);
+	
+	        // Then adjust to word boundaries within the verse
+	        if (passageStart < currentVerseStart) {
+	            passageStart = currentVerseStart;
+	        }
+	        if (passageEnd > currentVerseEnd) {
+	            passageEnd = currentVerseEnd;
+	        }
+	    }
+	
+	    // Ensure we have valid passage boundaries
+	    if (passageEnd <= passageStart) {
+	        passageEnd = matchEnd + 1;  // Ensure we at least include the match
+	    }
+	
+	    let passage = this.fullText.substring(passageStart, passageEnd);
+	
+	    // If passage is empty or only whitespace, expand it
+	    if (!passage.trim()) {
+	        passageStart = Math.max(0, matchStart - 50);  // Take 50 chars before match
+	        passageEnd = Math.min(this.fullText.length, matchEnd + 50);  // and 50 after
+	        passage = this.fullText.substring(passageStart, passageEnd);
+	    }
+	
+	    // Handle ellipses
+	    let prefix = '';
+	    let suffix = '';
+	
+	    if (isComment) {
+	        // Find verse boundaries for ellipsis determination
+	        let currentVerseStart = 0;
+	        let currentVerseKey = '';
+	        
+	        for (const [pos, key] of this.versePositions.entries()) {
+	            if (pos <= passageStart) {
+	                currentVerseStart = pos;
+	                currentVerseKey = key;
+	            } else {
+	                break;
+	            }
+	        }
+	        
+	        const currentVerseEnd = currentVerseStart + this.cleanedVerses.get(currentVerseKey).length;
+	
+	        // Only add ellipses if there's actually text before/after in the verse
+	        const textBefore = this.fullText.substring(currentVerseStart, passageStart).trim();
+	        const textAfter = this.fullText.substring(passageEnd, currentVerseEnd).trim();
+	        
+	        prefix = passageStart > currentVerseStart && textBefore !== '' ? '[...] ' : '';
+	        suffix = passageEnd < currentVerseEnd && textAfter !== '' ? ' [...]' : '';
+	    } else {
+	        prefix = passageStart > 0 ? '[...] ' : '';
+	        suffix = passageEnd < this.fullText.length ? ' [...]' : '';
+	    }
+	
+	    // Adjust match positions relative to passage
+	    const relativeMatchStart = matchStart - passageStart;
+	    const relativeMatchEnd = matchEnd - passageStart;
+	
+	    // Split passage into three parts and add highlighting
+	    const beforeMatch = passage.substring(0, relativeMatchStart);
+	    const match = passage.substring(relativeMatchStart, relativeMatchEnd);
+	    const afterMatch = passage.substring(relativeMatchEnd);
+	
+	    passage = prefix + beforeMatch + '<b>' + match + '</b>' + afterMatch + suffix;
+	
+	    // Clean verse if in comment mode
+	    if (isComment) {
+	        passage = cleanVerse(passage);
+	    }
+	
+	    return passage;
+	}
 
 	async findMatches(searchTerm, strict = false, isComment = false, singleResult = false, resultCallback) {
         const maxWords = (this.pali ? 100 : 150); //EN passages are 150 words long, Pali passages are 100 words long because words are generally longer
