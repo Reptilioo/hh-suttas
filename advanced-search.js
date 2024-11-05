@@ -1,6 +1,6 @@
 // Refactor?
 // Add keypress to stop search
-// Small issue: still adds ellipses at the end of a comment that doesn't have further text (it counts the first word of the next comment as being in the current comment)
+// Issue with comments: Some comments are cut without reason (for example: searchTerm "noble method" in mn10 comments) and still adds ellipses at the end of a comment that doesn't have further text (it counts the first word of the next comment as being in the current comment)
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
