@@ -47,7 +47,7 @@ import initializeSideBySide from "./js/utils/loadContent/initializeSideBySide.js
 import { toggleTheme } from "./js/utils/misc/toggleTheme.js";
 import { buildSutta } from "./js/utils/loadContent/buildSutta.js";
 import updateSuttaDatabase from './js/database/updateSuttaDatabase.js';
-import { checkForPaliUrlParameter } from './js/utils/navigation/checkForPaliUrlParameter.js';
+import { checkPaliUrlParam } from './js/utils/navigation/checkPaliUrlParam.js';
 
 // Wait for DOM to be fully loaded -- prevents funny business
 document.addEventListener('DOMContentLoaded', async function() {
@@ -60,7 +60,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (document.location.search) {
           const slug = document.location.search.replace("?q=", "").split("&")[0].replace(/\s/g, "").replace(/%20/g, "");
           buildSutta(slug, availableSuttasJson);
-		  checkForPaliUrlParameter();
+		  
+		  const urlParams = new URLSearchParams(window.location.search);
+		  checkPaliUrlParam(urlParams);
       } else if (!window.location.href.endsWith("/bookmarks.html") 
 		&& !window.location.href.endsWith("/glossary.html") 
 		&& !window.location.href.endsWith("/comments.html")
