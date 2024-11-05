@@ -1,6 +1,5 @@
 // Refactor?
 // Add keypress to stop search
-// Issue with comments: Some comments are cut without reason (for example: searchTerm "noble method" in mn10 comments) and still adds ellipses at the end of a comment that doesn't have further text (it counts the first word of the next comment as being in the current comment)
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
@@ -364,70 +363,108 @@ class SuttaSearch {
 	}
 	
     getPassage(startPos, endPos, matchStart, matchEnd, isComment = false) {
-		let passageStart = this.findWordBoundary(this.fullText, startPos, 'backward');
-		let passageEnd = this.findWordBoundary(this.fullText, endPos, 'forward');
+    // Find initial word boundaries
+    let passageStart = this.findWordBoundary(this.fullText, startPos, 'backward');
+    let passageEnd = this.findWordBoundary(this.fullText, endPos, 'forward');
 
-		// For comments, ensure we stay within verse boundaries
-		if (isComment) {
-			// Find verse boundaries
-			let verseStart = 0;
-			let verseEnd = 0;
+    // For comments, ensure we stay within verse boundaries
+    if (isComment) {
+        // Find the verse that contains the start position
+        let currentVerseStart = 0;
+        let currentVerseKey = '';
 
-			for (const [pos, key] of this.versePositions.entries()) {
-				if (pos <= passageStart) {
-					verseStart = pos;
-					verseEnd = pos + this.originalText[key].length;
-				}
-			}
+        for (const [pos, key] of this.versePositions.entries()) {
+            if (pos <= startPos) {
+                currentVerseStart = pos;
+                currentVerseKey = key;
+            } else {
+                break;
+            }
+        }
 
-			// Ensure passageEnd doesn't exceed the verse end
-			passageEnd = Math.min(passageEnd, verseEnd);
-			// Adjust again to avoid cutting a word if we had to reduce passageEnd
-			passageEnd = this.findWordBoundary(this.fullText.slice(0, passageEnd), passageEnd, 'backward');
-		}
+        const currentVerseEnd = currentVerseStart + this.cleanedVerses.get(currentVerseKey).length;
 
-		let passage = this.fullText.substring(passageStart, passageEnd);
+        // If the match crosses verse boundaries, adjust to stay within current verse
+        if (endPos > currentVerseEnd) {
+            passageEnd = currentVerseEnd;
+        }
 
-		// Handle ellipses
-		let prefix = '';
-		let suffix = '';
+        // Ensure we include the full match
+        passageStart = Math.min(passageStart, matchStart);
+        passageEnd = Math.max(passageEnd, matchEnd);
 
-		if (isComment) {
-			let verseStart = 0;
-			let verseEnd = 0;
+        // Then adjust to word boundaries within the verse
+        if (passageStart < currentVerseStart) {
+            passageStart = currentVerseStart;
+        }
+        if (passageEnd > currentVerseEnd) {
+            passageEnd = currentVerseEnd;
+        }
+    }
 
-			for (const [pos, key] of this.versePositions.entries()) {
-				if (pos <= passageStart) {
-					verseStart = pos;
-					verseEnd = pos + this.originalText[key].length;
-				}
-			}
+    // Ensure we have valid passage boundaries
+    if (passageEnd <= passageStart) {
+        passageEnd = matchEnd + 1;  // Ensure we at least include the match
+    }
 
-			prefix = passageStart > verseStart ? '[...] ' : '';
-			suffix = passageEnd < verseEnd ? ' [...]' : '';
-		} else {
-			prefix = passageStart > 0 ? '[...] ' : '';
-			suffix = passageEnd < this.fullText.length ? ' [...]' : '';
-		}
+    let passage = this.fullText.substring(passageStart, passageEnd);
 
-		// Adjust match positions relative to passage
-		const relativeMatchStart = matchStart - passageStart;
-		const relativeMatchEnd = matchEnd - passageStart;
+    // If passage is empty or only whitespace, expand it
+    if (!passage.trim()) {
+        passageStart = Math.max(0, matchStart - 50);  // Take 50 chars before match
+        passageEnd = Math.min(this.fullText.length, matchEnd + 50);  // and 50 after
+        passage = this.fullText.substring(passageStart, passageEnd);
+    }
 
-		// Split passage into three parts and add highlighting
-		const beforeMatch = passage.substring(0, relativeMatchStart);
-		const match = passage.substring(relativeMatchStart, relativeMatchEnd);
-		const afterMatch = passage.substring(relativeMatchEnd);
+    // Handle ellipses
+    let prefix = '';
+    let suffix = '';
 
-		passage = prefix + beforeMatch + '<b>' + match + '</b>' + afterMatch + suffix;
+    if (isComment) {
+        // Find verse boundaries for ellipsis determination
+        let currentVerseStart = 0;
+        let currentVerseKey = '';
+        
+        for (const [pos, key] of this.versePositions.entries()) {
+            if (pos <= passageStart) {
+                currentVerseStart = pos;
+                currentVerseKey = key;
+            } else {
+                break;
+            }
+        }
+        
+        const currentVerseEnd = currentVerseStart + this.cleanedVerses.get(currentVerseKey).length;
 
-		// Clean verse if in comment mode
-		if (isComment) {
-			passage = cleanVerse(passage);
-		}
+        // Only add ellipses if there's actually text before/after in the verse
+        const textBefore = this.fullText.substring(currentVerseStart, passageStart).trim();
+        const textAfter = this.fullText.substring(passageEnd, currentVerseEnd).trim();
+        
+        prefix = passageStart > currentVerseStart && textBefore !== '' ? '[...] ' : '';
+        suffix = passageEnd < currentVerseEnd && textAfter !== '' ? ' [...]' : '';
+    } else {
+        prefix = passageStart > 0 ? '[...] ' : '';
+        suffix = passageEnd < this.fullText.length ? ' [...]' : '';
+    }
 
-		return passage;
-	}
+    // Adjust match positions relative to passage
+    const relativeMatchStart = matchStart - passageStart;
+    const relativeMatchEnd = matchEnd - passageStart;
+
+    // Split passage into three parts and add highlighting
+    const beforeMatch = passage.substring(0, relativeMatchStart);
+    const match = passage.substring(relativeMatchStart, relativeMatchEnd);
+    const afterMatch = passage.substring(relativeMatchEnd);
+
+    passage = prefix + beforeMatch + '<b>' + match + '</b>' + afterMatch + suffix;
+
+    // Clean verse if in comment mode
+    if (isComment) {
+        passage = cleanVerse(passage);
+    }
+
+    return passage;
+}
 
 	async findMatches(searchTerm, strict = false, isComment = false, singleResult = false, resultCallback) {
         const maxWords = (this.pali ? 100 : 150); //EN passages are 150 words long, Pali passages are 100 words long because words are generally longer
