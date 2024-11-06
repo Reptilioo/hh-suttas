@@ -1,76 +1,77 @@
 import db from "../dexie/dexie.js";
-import suttasCount from '../../python/generated/suttas-count.js'
+import suttasCount from '../../python/generated/suttas-count.js';
+import hash from '../../python/generated/suttas-database-data-hash.js';
 
-export default function updateSuttaDatabase()
-{
-  db.suttas_en.count().then((count) => {
-    const isEmpty = count === 0;
-    const isDataMissing = suttasCount > count;
+function runImport(isEmpty) {
+  return fetch("../../python/generated/suttas-database-data.json")
+    .then(response => response.json())
+    .then((suttas) => {
+      const data = Object.entries(suttas).map(([key, value]) => ({
+        id: key,
+        value
+      }));
 
-    if (isEmpty || isDataMissing) {
-      function generateSortKey(id) {
-        // Assign prefix to sort in right book order
-        let prefix;
-        if (id.startsWith("dhp") //starts with KN to avoid SNP having SN prefix
-         || id.startsWith("iti") 
-         || id.startsWith("snp") 
-         || id.startsWith("thag") 
-         || id.startsWith("thig") 
-         || id.startsWith("ud")) 
-          prefix = "5";
-        else if (id.startsWith("dn")) prefix = "1";
-        else if (id.startsWith("mn")) prefix = "2";
-        else if (id.startsWith("sn")) prefix = "3";
-        else if (id.startsWith("an")) prefix = "4";
-        else prefix = "9";
-      
-        // Get numeric and text parts, apply padding for numeric parts
-        const paddedId = id.match(/\d+|\D+/g)
-          .map(chunk => isNaN(chunk) ? chunk : chunk.padStart(4, '0'))
-          .join('');
-      
-        return prefix + paddedId;
+      return db.suttas.bulkPut(data).then(() => {
+        const logMessage = isEmpty ? "[SUCCESS] Database setup complete" : "[SUCCESS] Database updated.";
+        console.log(logMessage);
+      });
+    })
+    .catch((error) => {
+      console.error("[ERROR] Failed to load or insert suttas data:", error);
+      throw error;
+    });
+}
+
+export default function updateSuttaDatabase() {
+  // First check if the 'hash' table exists in the schema
+  if (!db.tables.some(table => table.name === 'hash')) {
+    // Create the 'hash' table if it doesn't exist
+    db.version(db.verno + 1).stores({
+      hash: 'id, value' // Define 'id' as the primary key (without auto-increment)
+    });
+  }
+
+  // Function to update or create the hash entry
+  const updateHashAndRunImport = (isEmpty) => {
+    return db.hash.toArray()
+      .then(entries => {
+        if (entries.length === 0) {
+          // No entries - create a new one with an explicit id
+          return db.hash.add({ id: 1, value: hash })
+            .then(() => runImport(isEmpty));
+        } else {
+          // An entry exists - check if it's different
+          const currentHash = entries[0];
+          if (currentHash.value !== hash) {
+            // Update the existing hash
+            return db.hash.update(currentHash.id, { value: hash })
+              .then(() => runImport(isEmpty));
+          }
+          // If the hash is identical and the database is not empty, no need to import
+          if (!isEmpty) {
+            console.log("[INFO] Database is up to date. Skipped import.");
+            return Promise.resolve();
+          }
+          return runImport(isEmpty);
+        }
+      });
+  };
+
+  // Check the state of the database
+  return db.suttas.count()
+    .then((count) => {
+      const isEmpty = count === 0;
+      const isDataMissing = suttasCount > count;
+
+      if (isEmpty || isDataMissing) {
+        return updateHashAndRunImport(isEmpty);
+      } else {
+        // Even if the database is not empty, still check the hash
+        return updateHashAndRunImport(false);
       }
-      
-      fetch("../../python/generated/suttas-database-data.json")
-        .then((response) => response.json())
-        .then((suttas) => {
-          let suttasData = suttas;
-      
-          const dataEn = [];
-          const dataPl = [];
-      
-          Object.entries(suttasData).forEach(([key, value]) => {
-            const enEntry = {
-              id: key,
-              translation_en_anigha: value.translation_en_anigha || null,
-              heading: value.heading || null,
-              comment: value.comment || null,
-              sortKey: generateSortKey(key),  // Add sort key
-            };
-      
-            const plEntry = {
-              id: key,
-              root_pli_ms: value.root_pli_ms || null,
-              sortKey: generateSortKey(key),  // Add sort key
-            };
-      
-            dataEn.push(enEntry);
-            dataPl.push(plEntry);
-          });
-      
-          // Insert data in tables 
-          db.suttas_en.bulkPut(dataEn);
-          db.suttas_pl.bulkPut(dataPl);
-        })
-        .catch((error) => {
-          console.error("[ERROR] Failed to load suttas data:", error);
-        });
-
-    } else {
-      console.log("[INFO] Database is up to date. Skipped import.");
-    }
-  }).catch((error) => {
-    console.error("[ERROR] Failed to check data count:", error);
-  });
+    })
+    .catch((error) => {
+      console.error("[ERROR] Failed to check data count:",error);
+      throw error;
+    });
 }
