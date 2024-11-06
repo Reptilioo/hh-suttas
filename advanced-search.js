@@ -1,5 +1,6 @@
 // Refactor?
 // Add keypress to stop search
+// Need to remove './python/generated/suttas-database-data-hash.txt'
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
