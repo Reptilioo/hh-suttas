@@ -28,12 +28,6 @@ jobs:
           python -m pip install ebooklib
           # Add any other dependencies here if needed
 
-      - name: Run add_links_to_references.py script
-        run: python python/scripts/add_links_to_references.py
-        
-      - name: Run sutta_catalog_manager.py script
-        run: python python/scripts/sutta_catalog_manager.py
-      
       - name: Check if files in /suttas changed
         run: |
           if git diff --name-only HEAD^ HEAD | grep -q "^suttas/"; then
@@ -41,6 +35,14 @@ jobs:
           else 
             echo "suttas_changed=false" >> $GITHUB_ENV
           fi
+          
+      - name: Run add_links_to_references.py script
+        if: env.suttas_changed == 'true'
+        run: python python/scripts/add_links_to_references.py
+        
+      - name: Run sutta_catalog_manager.py script
+        if: env.suttas_changed == 'true'
+        run: python python/scripts/sutta_catalog_manager.py
       
       - name: Run suttas_database_data_generator.py script
         if: env.suttas_changed == 'true'
