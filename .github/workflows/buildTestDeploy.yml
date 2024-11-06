@@ -33,33 +33,41 @@ jobs:
         
       - name: Run sutta_catalog_manager.py script
         run: python python/scripts/sutta_catalog_manager.py
-
+      
+      - name: Check if files in /suttas changed
+        run: |
+          if git diff --name-only ${{ github.event.before }}..${{ github.sha }} | grep -q "^suttas/"; then
+            echo "suttas_changed=true" >> $GITHUB_ENV
+          else 
+            echo "suttas_changed=false" >> $GITHUB_ENV
+          fi
+      
       - name: Run suttas_database_data_generator.py script
+        if: env.suttas_changed == 'true'
         run: python python/scripts/suttas_database_data_generator.py
-
+      
       - name: Run epub_book_generator.py script
+        if: env.suttas_changed == 'true'
         run: python python/scripts/epub_book_generator.py
-        
+      
       - name: Set up Git config
         run: |
-          git config --global user.email "action@github.com"
+          git config --global user.email "action@github.com" 
           git config --global user.name "GitHub Action"
-
+      
       - name: Check for changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
-            echo "Changes detected. Preparing to push changes."
-            git add -A
-            git commit -m "Auto-commit changes from GitHub Actions" || echo "No changes to commit"
-            echo "changes=true" >> $GITHUB_ENV
+            echo "changes_detected=true" >> $GITHUB_ENV
           else
-            echo "No changes to push."
-            echo "changes=false" >> $GITHUB_ENV
+            echo "changes_detected=false" >> $GITHUB_ENV
           fi
-  
-      - name: Push changes
-        if: env.changes == 'true'
+      
+      - name: Commit and push changes
+        if: env.changes_detected == 'true'
         run: |
+          git add -A
+          git commit -m "Auto-commit changes from GitHub Actions"
           git push
 
   test-and-merge:
