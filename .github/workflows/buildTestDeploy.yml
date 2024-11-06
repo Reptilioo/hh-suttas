@@ -36,7 +36,7 @@ jobs:
       
       - name: Check if files in /suttas changed
         run: |
-          if git diff --name-only ${{ github.event.before }}..${{ github.sha }} | grep -q "^suttas/"; then
+          if git diff --name-only HEAD^ HEAD | grep -q "^suttas/"; then
             echo "suttas_changed=true" >> $GITHUB_ENV
           else 
             echo "suttas_changed=false" >> $GITHUB_ENV
