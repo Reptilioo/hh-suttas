@@ -223,13 +223,16 @@ b.dark{
 	#optionPanel h2{
 		text-align: center;
 	}
-	.search-field, 
-	.options{
+	.search-field{
 		margin: 0 auto 20px;
 	}
 	#configuration{
 		flex-direction: row;
 		justify-content: space-evenly;
+		flex-wrap: wrap;
+	}
+	.options{
+		margin: 0 10px 20px;
 	}
 	.content{
 		padding: 5px 0;
