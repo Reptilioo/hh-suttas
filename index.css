@@ -39,7 +39,7 @@ b{
 }
 
 body {
-  margin: .3rem 3rem;
+  margin: 0 3rem;
   background-color: var(--light-off-white);
   font-family: "RobotoSerif", serif;
 }
@@ -132,8 +132,8 @@ body.dark {
   align-items: center;
   flex-wrap: wrap;
   gap: .3rem;
-  margin-bottom: 10px;
-  margin-top: -40px;
+  margin-bottom: 5px;
+  margin-top: -37px;
 }
 
 .icon-button {
