@@ -252,8 +252,8 @@ span.eng-lang {
 }
 
 .pli-lang > .searchTerm{
-	color: var(--orange);
-	font-size: 1.2rem;
+	color: var(--red);
+	font-size: 1.3rem;
 }
 
 p,
