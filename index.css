@@ -422,8 +422,7 @@ br {
 }
 
 .links-area a {
-  position: relative;
-  top: 0;
+  display: flex;
   transition: all ease 0.5s;
   filter: opacity(40%);
 }
