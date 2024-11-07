@@ -27,6 +27,7 @@ b{
   --darker-gray: #181a1b;
   --charcoal: #333;
   --dark-orange: #8B4000;
+  --orange: #D55600;
   --light-orange: #FFAC1C;
   --light-gray: #8f8f8f;
   --dark-blue: #42426a;
@@ -240,6 +241,19 @@ span.eng-lang {
 
 .highlight > span.pli-lang {
   margin-top: .4rem;
+}
+
+.eng-lang > .searchTerm{
+	color: var(--dark-orange);
+}
+
+.dark .eng-lang > .searchTerm{
+	color: var(--light-orange);
+}
+
+.pli-lang > .searchTerm{
+	color: var(--orange);
+	font-size: 1.2rem;
 }
 
 p,
