@@ -403,6 +403,7 @@ br {
   gap: 1rem;
   justify-content: left;
   align-items: center;
+  min-height: 45px;
 }
 
 .links-area a {
@@ -601,11 +602,9 @@ a:hover {
 #container {
   position: relative;
   margin-left:auto;
-  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
- 
   align-items: center;
   max-width: 150px;
 
