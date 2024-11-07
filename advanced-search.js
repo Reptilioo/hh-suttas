@@ -4,6 +4,7 @@
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
+import { removeDiacritics } from './js/utils/misc/removeDiacritics.js';
 
 //Search suttas by search term and language options.
 async function searchSuttasWithStop(searchTerm, options) {
@@ -319,11 +320,6 @@ async function startSearch() {
 	searchButton.classList.remove("red");
 	isSearching = false;
 }
-
-// Utility functions for text processing
-const removeDiacritics = (text) => {
-    return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-};
 
 const normalizeSpaces = (text) => {
     return text.replace(/\u00A0/g, ' ')
