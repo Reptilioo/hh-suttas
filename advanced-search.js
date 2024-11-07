@@ -1,5 +1,4 @@
 // Refactor?
-// Add keypress to stop search
 // Need to remove './python/generated/suttas-database-data-hash.txt'
 
 import db from "./js/dexie/dexie.js";
@@ -39,6 +38,20 @@ async function searchSuttasWithStop(searchTerm, options) {
         }
         return text.includes(searchTerm);
     };
+	
+	function encodeStringForURL(str) {
+	  // Replace special chars by their encoded equivalent
+	  str = str.replace(/[^a-zA-Z0-9-_.~]/g, function(char) {
+		return encodeURIComponent(char);
+	  });
+
+	  // Replace spaces by +
+	  str = str.replace(/%20/g, '+');
+
+	  return str;
+	}
+	
+	const searchTermUrl = encodeStringForURL(searchTerm);
 
     const searchAndAddResults = async (suttas, lang) => {
         for (const sutta of suttas) {
@@ -95,13 +108,13 @@ async function searchSuttasWithStop(searchTerm, options) {
                 if (mainResults.length > 0 || commentResults.length > 0) {
                     // Add main content results with highlighted title if there was a title match
                     for (const result of mainResults) {
-                        const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}#${result.verseRange}`;
+					const link = `${window.location.origin}/?q=${sutta.id}&search=${searchTermUrl}&pali=hide#${result.verseRange}`;
                         await addResultToDOMAsync(id, titleMatch ? displayTitle : title, result.passage, link);
                         gotResults = true;
                     }
                     // Add comment results
                     for (const result of commentResults) {
-                        const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}#comment${result.commentNb}`;
+                        const link = `${window.location.origin}/?q=${sutta.id}&search=${searchTermUrl}#comment${result.commentNb}`;
                         await addResultToDOMAsync(id, `${titleMatch ? displayTitle : title} - Comments`, result.passage, link);
                         gotResults = true;
                     }
@@ -109,7 +122,7 @@ async function searchSuttasWithStop(searchTerm, options) {
                 // If no content matches but title matches
                 else if (titleMatch) {
                     const firstPassage = getFirstPassage(sutta.translation_en_anigha, 150);
-                    const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}`;
+                    const link = `${window.location.origin}/?q=${sutta.id}`;
                     await addResultToDOMAsync(id, displayTitle, firstPassage, link);
                     gotResults = true;
                 }
@@ -121,7 +134,7 @@ async function searchSuttasWithStop(searchTerm, options) {
                 if (results.length > 0) {
                     // Add results with highlighted title if there was a title match
                     for (const result of results) {
-                        const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}#${result.verseRange}`;
+                        const link = `${window.location.origin}/?q=${sutta.id}&search=${searchTermUrl}&pali=show#${result.verseRange}`;
                         await addResultToDOMAsync(id, titleMatch ? displayTitle : title, result.passage, link);
                         gotResults = true;
                     }
@@ -129,7 +142,7 @@ async function searchSuttasWithStop(searchTerm, options) {
                 // If no content matches but title matches
                 else if (titleMatch) {
                     const firstPassage = getFirstPassage(sutta.root_pli_ms, 100);
-                    const link = `https://suttas.hillsidehermitage.org/?q=${sutta.id}`;
+                    const link = `${window.location.origin}/?q=${sutta.id}`;
                     await addResultToDOMAsync(id, displayTitle, firstPassage, link);
                     gotResults = true;
                 }
@@ -359,7 +372,6 @@ class SuttaSearch {
         this.versePositions = new Map();
         this.commentNumbers = new Map();
         this.positionMap = new Map();
-        // Map to store cleaned verses
         this.cleanedVerses = new Map();
         this.initialize();
     }
@@ -373,7 +385,8 @@ class SuttaSearch {
         // Pre-clean and store verses
         for (const key of this.verseKeys) {
             const verse = this.originalText[key];
-            const cleanedVerse = cleanVerse(verse);
+            // Remove markdown formatting but keep original text with diacritics
+            const cleanedVerse = this.cleanMarkdownOnly(verse);
             this.cleanedVerses.set(key, cleanedVerse);
 
             if (verse.trim() !== '') {
@@ -386,19 +399,20 @@ class SuttaSearch {
             currentPosition += this.cleanedVerses.get(key).length;
         }
 
-        // Create the correspondence between the positions of the processed and original text
-        const normalizedText = processText(this.fullText, this.pali);
+        // Create normalized version of full text for searching
+        this.processedText = this.normalizeText(this.fullText);
+        
+        // Map positions between original and normalized text
         let originalIndex = 0;
         let normalizedIndex = 0;
-
-        while (normalizedIndex < normalizedText.length) {
+        const normalizedFullText = this.processedText;
+        
+        while (normalizedIndex < normalizedFullText.length) {
             while (originalIndex < this.fullText.length) {
                 const originalChar = this.fullText[originalIndex];
-                const normalizedChar = normalizedText[normalizedIndex];
-
-                if (originalChar === normalizedChar ||
-                    (this.pali && removeDiacritics(originalChar) === normalizedChar) ||
-                    (normalizedChar === ' ' && /[\s\u00A0]|&nbsp;/.test(originalChar))) {
+                const normalizedChar = normalizedFullText[normalizedIndex];
+                
+                if (this.compareChars(originalChar, normalizedChar)) {
                     this.positionMap.set(normalizedIndex, originalIndex);
                     normalizedIndex++;
                     originalIndex++;
@@ -407,8 +421,31 @@ class SuttaSearch {
                 originalIndex++;
             }
         }
+    }
 
-        this.processedText = normalizedText;
+    // Compare characters accounting for diacritics
+    compareChars(original, normalized) {
+        return original === normalized || 
+               removeDiacritics(original) === normalized ||
+               normalized === ' ' && /[\s\u00A0]|&nbsp;/.test(original);
+    }
+
+    // Clean markdown formatting but preserve diacritics
+    cleanMarkdownOnly(text) {
+        // Remove markdown formatting
+        text = text.replace(/[_*]([^_*]+)[_*]/g, '$1');
+        // Clean markdown links
+        text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+        return text;
+    }
+
+    // Normalize text for searching (remove diacritics and clean spacing)
+    normalizeText(text) {
+        text = removeDiacritics(text);
+        return text.replace(/\u00A0/g, ' ')
+                  .replace(/&nbsp;/g, ' ')
+                  .replace(/\s+/g, ' ')
+                  .trim();
     }
 	
 	getCommentNumber(verse) {
@@ -565,23 +602,22 @@ class SuttaSearch {
 	}
 
 	async findMatches(searchTerm, strict = false, isComment = false, singleResult = false, resultCallback) {
-        const maxWords = (this.pali ? 100 : 150); //EN passages are 150 words long, Pali passages are 100 words long because words are generally longer
-		const maxResults = (singleResult ? 1 : 10); //Displays 10 results maximum for a given sutta
-		
-        const processedSearchTerm = processText(searchTerm, this.pali);
+        const maxWords = (this.pali ? 100 : 150);
+        const maxResults = (singleResult ? 1 : 10);
+        
+        // Normalize the search term the same way as the text
+        const normalizedSearchTerm = this.normalizeText(searchTerm);
         const results = [];
 
-        // Create search regex for processed text
-        let searchPattern = escapeRegExp(processedSearchTerm.trim());
+        let searchPattern = escapeRegExp(normalizedSearchTerm.trim());
         if (strict) {
             searchPattern = '\\b' + searchPattern + '\\b';
         }
 
         const regex = new RegExp(searchPattern, 'gi');
-
         let match;
+
         while ((match = regex.exec(this.processedText)) !== null) {
-            // Check if it's a full word in strict mode
             if (strict) {
                 const wordBoundaryRegex = /[\s.,!?;"')\]}\-:/]+/;
                 const textBeforeMatch = this.processedText.slice(0, match.index);
@@ -589,7 +625,7 @@ class SuttaSearch {
 
                 const isStartOfWord = match.index === 0 || wordBoundaryRegex.test(textBeforeMatch.slice(-1));
                 const isEndOfWord = match.index + match[0].length === this.processedText.length ||
-                                     wordBoundaryRegex.test(textAfterMatch[0]);
+                                  wordBoundaryRegex.test(textAfterMatch[0]);
 
                 if (!isStartOfWord || !isEndOfWord) {
                     continue;
