@@ -1,16 +1,18 @@
+import { removeDiacritics } from './../misc/removeDiacritics.js';
+
 export function checkSearchUrlParam() {
-	const verseRange = window.location.hash.substring(1);
+    const verseRange = window.location.hash.substring(1);
     if (!verseRange) return;
     
-	const urlParams = new URLSearchParams(window.location.search);
-	
+    const urlParams = new URLSearchParams(window.location.search);
+    
     let searchTerm = urlParams.get('search');
     if (!searchTerm) return;
-	searchTerm = searchTerm.replace("+", " ");
+    searchTerm = searchTerm.replace("+", " ");
     
     let isPali = urlParams.get('pali') === "show";
-    
-    // Fonction pour obtenir la range des versets
+
+    // Function to get the verse range
     const getVerseRange = (verseRange) => {
         const parts = verseRange.split('-');
         if (parts.length === 2) {
@@ -27,7 +29,7 @@ export function checkSearchUrlParam() {
         };
     };
 
-    // Fonction pour comparer les IDs des versets
+    // Function to compare verse IDs
     const compareVerseIds = (id1, id2) => {
         const [prefix1, num1] = id1.split(':');
         const [prefix2, num2] = id2.split(':');
@@ -41,7 +43,7 @@ export function checkSearchUrlParam() {
         return nums1[1] - nums2[1];
     };
 
-    // Fonction pour vérifier si un ID est dans la range
+    // Function to check if an ID is within a range
     const isIdInRange = (id, range) => {
         const startCompare = compareVerseIds(id, range.start);
         const endCompare = compareVerseIds(id, range.end);
@@ -52,55 +54,78 @@ export function checkSearchUrlParam() {
     const range = getVerseRange(verseRange);
     const langClass = isPali ? '.pli-lang' : '.eng-lang';
     
-    // Récupérer tous les segments dans la range
+    // Get all segments within the range
     const segments = document.querySelectorAll('.segment');
-	console.log(segments);
-    let fullText = '';
-    let relevantSpans = [];
-    
-    // Construire le texte complet et collecter les spans pertinents
+    let textsWithPositions = [];
+    let totalLength = 0;
+
+    // Collect texts and their positions
     segments.forEach(segment => {
         if (isIdInRange(segment.id, range)) {
             const langSpan = segment.querySelector(langClass);
             if (langSpan) {
-                fullText += langSpan.textContent;
-                relevantSpans.push(langSpan);
+                const originalText = langSpan.textContent;
+                let searchableText = originalText.toLowerCase();
+                if (isPali) {
+                    searchableText = removeDiacritics(searchableText);
+                }
+                textsWithPositions.push({
+                    span: langSpan,
+                    originalText,
+                    searchableText,
+                    startPosition: totalLength
+                });
+                totalLength += originalText.length;
             }
         }
     });
 
-    // Rechercher le terme dans le texte complet
-    const searchIndex = fullText.indexOf(searchTerm);
+    // Prepare the search term
+    let searchableSearchTerm = searchTerm.toLowerCase();
+    if (isPali) {
+        searchableSearchTerm = removeDiacritics(searchableSearchTerm);
+    }
+
+    // Build the complete searchable text
+    const fullSearchableText = textsWithPositions
+        .map(item => item.searchableText)
+        .join('');
+
+    // Search for the term in the searchable text
+    const searchIndex = fullSearchableText.indexOf(searchableSearchTerm);
     if (searchIndex === -1) return;
 
-    // Surligner le texte trouvé
-    let currentPosition = 0;
-    let remainingSearch = searchTerm;
+    // Highlight the found text
+    let remainingSearchLength = searchTerm.length;
+    let currentSearchPosition = searchIndex;
 
-    for (const span of relevantSpans) {
-        const spanText = span.textContent;
-        const spanLength = spanText.length;
-        
-        if (currentPosition + spanLength <= searchIndex) {
-            currentPosition += spanLength;
-            continue;
+    for (const textItem of textsWithPositions) {
+        const spanStartPosition = textItem.startPosition;
+        const spanEndPosition = spanStartPosition + textItem.originalText.length;
+
+        // Check if this span contains part of the searched text
+        if (currentSearchPosition >= spanStartPosition && 
+            currentSearchPosition < spanEndPosition) {
+            
+            const startInSpan = currentSearchPosition - spanStartPosition;
+            const searchLengthInSpan = Math.min(
+                remainingSearchLength,
+                textItem.originalText.length - startInSpan
+            );
+
+            const before = textItem.originalText.substring(0, startInSpan);
+            const highlighted = textItem.originalText.substring(
+                startInSpan,
+                startInSpan + searchLengthInSpan
+            );
+            const after = textItem.originalText.substring(startInSpan + searchLengthInSpan);
+
+            textItem.span.innerHTML = before + '<span class="searchTerm">' + highlighted + '</span>' + after;
+
+            remainingSearchLength -= searchLengthInSpan;
+            currentSearchPosition += searchLengthInSpan;
+
+            if (remainingSearchLength === 0) break;
         }
-
-        const startInSpan = Math.max(0, searchIndex - currentPosition);
-        const searchLengthInSpan = Math.min(
-            remainingSearch.length,
-            spanLength - startInSpan
-        );
-
-        const before = spanText.substring(0, startInSpan);
-        const highlighted = spanText.substring(startInSpan, startInSpan + searchLengthInSpan);
-        const after = spanText.substring(startInSpan + searchLengthInSpan);
-
-        span.innerHTML = before + '<span class="searchTerm">' + highlighted + '</span>' + after;
-
-        remainingSearch = remainingSearch.substring(searchLengthInSpan);
-        if (remainingSearch.length === 0) break;
-
-        currentPosition += spanLength;
     }
 }
