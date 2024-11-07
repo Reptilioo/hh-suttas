@@ -61,8 +61,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           const slug = document.location.search.replace("?q=", "").split("&")[0].replace(/\s/g, "").replace(/%20/g, "");
           buildSutta(slug, availableSuttasJson);
 		  
-		  const urlParams = new URLSearchParams(window.location.search);
-		  checkPaliUrlParam(urlParams);
+		  checkPaliUrlParam();
       } else if (!window.location.href.endsWith("/bookmarks.html") 
 		&& !window.location.href.endsWith("/glossary.html") 
 		&& !window.location.href.endsWith("/comments.html")
