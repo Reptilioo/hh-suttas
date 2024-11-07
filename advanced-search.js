@@ -1,5 +1,6 @@
 // Refactor?
 // Need to remove './python/generated/suttas-database-data-hash.txt'
+// Make the changes necessary for the links to comments to include only "?q=" and "#verseStart-verseEnd", not "&search" or "&pali"
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
