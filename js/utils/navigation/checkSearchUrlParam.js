@@ -12,77 +12,77 @@ export function checkSearchUrlParam() {
     
     let isPali = urlParams.get('pali') === "show";
 
-    // Fonction pour chercher et surligner dans un commentaire
-	const searchInComment = (commentId, searchTerm) => {
-		const commentElement = document.getElementById(commentId);
-		if (!commentElement) return;
+    // Function to search and highlight in a comment
+    const searchInComment = (commentId, searchTerm) => {
+        const commentElement = document.getElementById(commentId);
+        if (!commentElement) return;
 
-		const commentSpan = commentElement.querySelector('span');
-		if (!commentSpan) return;
+        const commentSpan = commentElement.querySelector('span');
+        if (!commentSpan) return;
 
-		// Sauvegarder le HTML original
-		const originalHtml = commentSpan.innerHTML;
-		const originalText = commentSpan.textContent;
-		const searchableText = originalText.toLowerCase();
-		const searchableSearchTerm = searchTerm.toLowerCase();
+        // Save the original HTML
+        const originalHtml = commentSpan.innerHTML;
+        const originalText = commentSpan.textContent;
+        const searchableText = originalText.toLowerCase();
+        const searchableSearchTerm = searchTerm.toLowerCase();
 
-		const searchIndex = searchableText.indexOf(searchableSearchTerm);
-		if (searchIndex === -1) return;
+        const searchIndex = searchableText.indexOf(searchableSearchTerm);
+        if (searchIndex === -1) return;
 
-		// Extraire le numéro et le lien du commentaire
-		const commentNumber = originalText.substring(0, originalText.indexOf(':') + 1);
-		const backLink = commentSpan.querySelector('a');
-		const backLinkHtml = backLink ? backLink.outerHTML : '';
+        // Extract the comment number and back link
+        const commentNumber = originalText.substring(0, originalText.indexOf(':') + 1);
+        const backLink = commentSpan.querySelector('a');
+        const backLinkHtml = backLink ? backLink.outerHTML : '';
 
-		// Fonction pour obtenir la position réelle dans le HTML pour un index dans le texte
-		const getHtmlIndex = (textIndex) => {
-			let currentTextIndex = 0;
-			let currentHtmlIndex = 0;
-			
-			while (currentTextIndex < textIndex && currentHtmlIndex < originalHtml.length) {
-				if (originalHtml[currentHtmlIndex] === '<') {
-					// Sauter la balise HTML
-					while (currentHtmlIndex < originalHtml.length && originalHtml[currentHtmlIndex] !== '>') {
-						currentHtmlIndex++;
-					}
-					currentHtmlIndex++;
-				} else {
-					currentTextIndex++;
-					currentHtmlIndex++;
-				}
-			}
-			return currentHtmlIndex;
-		};
+        // Function to get the actual position in the HTML for an index in the text
+        const getHtmlIndex = (textIndex) => {
+            let currentTextIndex = 0;
+            let currentHtmlIndex = 0;
+            
+            while (currentTextIndex < textIndex && currentHtmlIndex < originalHtml.length) {
+                if (originalHtml[currentHtmlIndex] === '<') {
+                    // Skip the HTML tag
+                    while (currentHtmlIndex < originalHtml.length && originalHtml[currentHtmlIndex] !== '>') {
+                        currentHtmlIndex++;
+                    }
+                    currentHtmlIndex++;
+                } else {
+                    currentTextIndex++;
+                    currentHtmlIndex++;
+                }
+            }
+            return currentHtmlIndex;
+        };
 
-		// Obtenir les positions dans le HTML
-		const htmlSearchIndex = getHtmlIndex(searchIndex);
-		const htmlSearchEndIndex = getHtmlIndex(searchIndex + searchTerm.length);
+        // Get the positions in the HTML
+        const htmlSearchIndex = getHtmlIndex(searchIndex);
+        const htmlSearchEndIndex = getHtmlIndex(searchIndex + searchTerm.length);
 
-		// Découper et reconstruire le HTML en préservant les balises
-		const before = originalHtml.substring(0, htmlSearchIndex);
-		const highlighted = originalHtml.substring(htmlSearchIndex, htmlSearchEndIndex);
-		let after = originalHtml.substring(htmlSearchEndIndex);
+        // Cut and rebuild the HTML while preserving the tags
+        const before = originalHtml.substring(0, htmlSearchIndex);
+        const highlighted = originalHtml.substring(htmlSearchIndex, htmlSearchEndIndex);
+        let after = originalHtml.substring(htmlSearchEndIndex);
 
-		// Retirer la flèche et le lien de retour de 'after' car ils sont dans backLinkHtml
-		const linkIndex = after.indexOf('<a href=');
-		if (linkIndex !== -1) {
-			after = after.substring(0, linkIndex);
-		}
+        // Remove the arrow and back link from 'after' because they are in backLinkHtml
+        const linkIndex = after.indexOf('<a href=');
+        if (linkIndex !== -1) {
+            after = after.substring(0, linkIndex);
+        }
 
-		// Reconstruire le HTML en préservant les balises et le lien
-		commentSpan.innerHTML = before + 
-			'<span class="searchTerm">' + highlighted + '</span>' + 
-			after + 
-			backLinkHtml;
-	};
+        // Rebuild the HTML while preserving the tags and link
+        commentSpan.innerHTML = before + 
+            '<span class="searchTerm">' + highlighted + '</span>' + 
+            after + 
+            backLinkHtml;
+    };
 
-    // Vérifier si c'est une recherche dans un commentaire
+    // Check if it's a search in a comment
     if (verseRange.startsWith('comment')) {
         searchInComment(verseRange, searchTerm);
         return;
     }
 
-    // Le reste du code pour la recherche dans les versets reste inchangé
+    // The rest of the code for searching in verses remains unchanged
     const getVerseRange = (verseRange) => {
         const parts = verseRange.split('-');
         if (parts.length === 2) {
