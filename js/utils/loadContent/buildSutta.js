@@ -2,6 +2,7 @@ import getDocumentAreas from "../getDocumentAreas.js";
 import { scrollToHash } from "../navigation/scrollToHash.js";
 import { addNavbar } from "./addNavbar.js";
 import { initializePaliToggle } from "./initializePaliToggle.js";
+import { checkSearchUrlParam } from '../navigation/checkSearchUrlParam.js';
 
 export function buildSutta(slug, availableSuttasJson) 
 {
@@ -102,8 +103,13 @@ export function buildSutta(slug, availableSuttasJson)
 
       footer.style.display = originalDisplay;
       
+	  // highlight search term
+	  checkSearchUrlParam();
+	  
       // scroll to the quote in the url if present
       scrollToHash();
+	  
+	  
     })
     .catch(error => {
       console.log(error);
