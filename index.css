@@ -247,6 +247,7 @@ span.eng-lang {
 .eng-lang > .searchTerm,
 .comment-highlight .searchTerm {
 	color: var(--dark-orange);
+	font-family: "RobotoSerif Bold";
 }
 
 .dark .eng-lang > .searchTerm,
