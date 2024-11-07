@@ -1,8 +1,9 @@
 import getDocumentAreas from "../getDocumentAreas.js";
 
-export function checkPaliUrlParam(urlParams){
+export function checkPaliUrlParam(){
 	const {suttaArea} = getDocumentAreas();
-
+    const urlParams = new URLSearchParams(window.location.search);
+	
 	if (urlParams.get('pali') === 'show' && localStorage.paliToggle === "hide") {
     	// If pali is hidden but url parameter is set to "show", show pali
 		suttaArea.classList.remove("hide-pali");
