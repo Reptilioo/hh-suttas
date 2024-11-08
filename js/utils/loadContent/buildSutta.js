@@ -58,7 +58,7 @@ export function buildSutta(slug, availableSuttasJson)
             `${openHtml}<span class="segment" id="${segment}">` +
             `<span class="pli-lang" lang="pi">${root_text[segment] || ''}</span>` +
             `<span class="eng-lang" lang="en">${translation_text[segment]}` +
-            `${comment_text[segment] ? `<a href="#comment${commentCount}" class="comment">[${commentCount}]</a>` : ''}` +
+            `${comment_text[segment] ? `<a href="${window.location.origin}?q=${slug}#comment${commentCount}" class="comment">[${commentCount}]</a>` : ''}` +
             `</span></span>${closeHtml}\n\n`;
         
             if (comment_text[segment]) 
@@ -70,7 +70,7 @@ export function buildSutta(slug, availableSuttasJson)
                 <p id="comment${commentCount}"><span>
                 ${commentCount}: ${converter.makeHtml(comment_text[segment])
                     .replace(/^<p>(.*)<\/p>$/, '$1')}
-                <a href="#${segment}~no-highlight" style="cursor: pointer; font-size: 14px;">&larr;</a>
+                <a href="${window.location.origin}?q=${slug}#${segment}~no-highlight" style="cursor: pointer; font-size: 14px;">&larr;</a>
                 </span></p>
                 `;
     
