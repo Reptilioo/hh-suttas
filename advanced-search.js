@@ -1,5 +1,7 @@
 // Refactor?
 // Need to remove './python/generated/suttas-database-data-hash.txt'
+// with exact match: Doesn't find "its foundation." or "is the origin of suffering." because of last point
+// checkUrlSearchParam: http://localhost/?q=mn20&search=see+the+comments+in+mn+18#comment2 -> adds 3 nested <span class="searchTerm">
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
