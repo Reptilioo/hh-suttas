@@ -250,7 +250,7 @@ span.eng-lang {
 	font-family: "RobotoSerif Bold";
 }
 
-.comment-highlight .searchTerm a{
+.comment-highlight a .searchTerm{
 	text-decoration: underline;
 }
 
