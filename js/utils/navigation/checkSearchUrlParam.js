@@ -1,5 +1,5 @@
 import { removeDiacritics } from './../misc/removeDiacritics.js';
-
+//http://localhost/?q=mn28&search=origination+sees+the+dhamma.+one+who+sees+the+dhamma+sees+dependent+origination.%E2%80%9D+and+these+five-assumption-aggregates+are+indeed+dependently+arisen.+the+desire,+adherence,+affection,+and+resting+upon+these+five-assumption-aggregates+is+the+origin+of+suffering.+the+dispelling+and+giving+up+of+desire-and-passion+for+these+five-assumption-aggregates+is+the+cessation+of+suffering.%E2%80%99+at+this+point,+much+has+been+done+by+that+bhikkhu&pali=hide#mn28:38.2-mn28:38.14
 export function checkSearchUrlParam() {
     const verseRange = window.location.hash.substring(1);
     if (!verseRange) return;
