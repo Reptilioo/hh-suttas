@@ -1,5 +1,5 @@
 import { removeDiacritics } from './../misc/removeDiacritics.js';
-
+// http://localhost/?q=mn20&search=etas%C4%81+citta%E1%B9%83#comment7 -> <em> retirés
 export function checkSearchUrlParam() {
     const verseRange = window.location.hash.substring(1);
     if (!verseRange) return;
