@@ -250,6 +250,10 @@ span.eng-lang {
 	font-family: "RobotoSerif Bold";
 }
 
+.comment-highlight .searchTerm a{
+	text-decoration: underline;
+}
+
 .dark .eng-lang > .searchTerm,
 .dark .comment-highlight .searchTerm {
 	color: var(--light-orange);
