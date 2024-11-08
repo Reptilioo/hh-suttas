@@ -291,9 +291,9 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
 }
 
 function getVerseNumber(verse) {
-    // Gérer le cas des versets composés comme "mn28:29-30.1"
+    // Handle cases like "mn28:29-30.1" for composite verses
     if (verse.includes('-')) {
-        // Pour les versets composés, on prend le premier numéro
+        // For composite verses, take the first number
         verse = verse.split('-')[0];
     }
     
@@ -312,16 +312,16 @@ function getVersePrefix(verse) {
 function getSegmentsBetweenVerses(verseRange) {
     const [startVerse, endVerse] = verseRange.split('-');
     
-    // Extraire les composants du verset de début
+    // Extract components of the start verse
     const startPrefix = getVersePrefix(startVerse);
     const startNum = getVerseNumber(startVerse);
     
-    // Extraire les composants du verset de fin
-    let endPrefix = startPrefix;  // Par défaut, même préfixe
+    // Extract components of the end verse
+    let endPrefix = startPrefix;  // Default to the same prefix
     let endVerseParts = endVerse.match(/^(?:([a-z]+):)?(.+)$/i);
     
     if (endVerseParts && endVerseParts[1]) {
-        endPrefix = endVerseParts[1];  // Si un préfixe est spécifié
+        endPrefix = endVerseParts[1];  // If a prefix is specified
     }
     const endNum = getVerseNumber(endVerseParts ? endVerseParts[2] : endVerse);
     
@@ -330,7 +330,7 @@ function getSegmentsBetweenVerses(verseRange) {
             const id = segment.getAttribute('id');
             if (!id) return false;
             
-            // Vérifier si l'ID commence par l'un des préfixes
+            // Check if the ID starts with one of the prefixes
             const prefix = getVersePrefix(id);
             if (prefix !== startPrefix && prefix !== endPrefix) return false;
             
