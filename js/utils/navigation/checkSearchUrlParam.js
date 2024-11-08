@@ -1,5 +1,5 @@
 import { removeDiacritics } from './../misc/removeDiacritics.js';
-//http://localhost/?q=mn28&search=origination+sees+the+dhamma.+one+who+sees+the+dhamma+sees+dependent+origination.%E2%80%9D+and+these+five-assumption-aggregates+are+indeed+dependently+arisen.+the+desire,+adherence,+affection,+and+resting+upon+these+five-assumption-aggregates+is+the+origin+of+suffering.+the+dispelling+and+giving+up+of+desire-and-passion+for+these+five-assumption-aggregates+is+the+cessation+of+suffering.%E2%80%99+at+this+point,+much+has+been+done+by+that+bhikkhu&pali=hide#mn28:38.2-mn28:38.14
+
 export function checkSearchUrlParam() {
     const verseRange = window.location.hash.substring(1);
     if (!verseRange) return;
@@ -175,6 +175,18 @@ function handleCommentSearch(commentId, searchTerm) {
     commentElement.querySelector('span').innerHTML = result;
 }
 
+function normalizeText(text) {
+    // Replace HTML spaces with regular spaces
+    let normalized = text.replace(/&nbsp;/g, ' ')
+                        // Remove multiple spaces
+                        .replace(/\s+/g, ' ')
+                        .toLowerCase();
+    if (isPali) {
+        normalized = removeDiacritics(normalized);
+    }
+    return normalized;
+}
+
 function handleVerseSearch(verseRange, searchTerm, isPali) {
     let segments;
     if (verseRange.includes('-')) {
@@ -192,7 +204,6 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
         const langSpan = segment.querySelector(`span.${langClass}`);
         if (!langSpan) return null;
 
-        // Extract <a> tags and their position
         const originalHtml = langSpan.innerHTML;
         const tags = [];
         let workingHtml = originalHtml;
@@ -208,8 +219,10 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
             });
         }
 
-        // Completely remove <a> tags and their content for the search
-        const searchText = workingHtml.replace(linkRegex, '');
+        // Remove <a> tags and normalize HTML spaces
+        const searchText = workingHtml.replace(linkRegex, '')
+                                    .replace(/&nbsp;/g, ' ')
+                                    .replace(/\s+/g, ' ');
 
         return {
             element: langSpan,
@@ -251,7 +264,7 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
 
         const matchEnd = matchIndex + normalizedSearchTerm.length;
 
-        // For each affected segment
+        // Pour chaque segment affecté
         segmentBoundaries.forEach(segment => {
             const segmentEnd = segment.start + segment.length;
 
@@ -261,26 +274,46 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
 
                 let segmentText = segment.data.originalHtml;
                 
-                // Recalculate positions considering removed <a> tags
+                // Recalculer les positions en tenant compte des balises <a> supprimées
                 let adjustedStart = segmentMatchStart;
                 let adjustedEnd = segmentMatchEnd;
 
-                segment.data.tags.forEach(tag => {
-                    if (tag.start < segmentMatchStart) {
-                        adjustedStart += tag.end - tag.start;
+                // Ajuster les positions pour préserver l'intégrité des mots
+                const words = segmentText.split(/(\s+)/);
+                let currentPos = 0;
+                let finalStart = 0;
+                let finalEnd = segmentText.length;
+
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    const nextPos = currentPos + word.length;
+
+                    if (currentPos <= adjustedStart && nextPos > adjustedStart) {
+                        finalStart = currentPos;
                     }
-                    if (tag.start < segmentMatchEnd) {
-                        adjustedEnd += tag.end - tag.start;
+                    if (currentPos < adjustedEnd && nextPos >= adjustedEnd) {
+                        finalEnd = nextPos;
+                    }
+
+                    currentPos = nextPos;
+                }
+
+                segment.data.tags.forEach(tag => {
+                    if (tag.start < finalStart) {
+                        finalStart += tag.end - tag.start;
+                    }
+                    if (tag.start < finalEnd) {
+                        finalEnd += tag.end - tag.start;
                     }
                 });
 
-                // Add highlight
+                // Ajouter la mise en surbrillance
                 segmentText = 
-                    segmentText.slice(0, adjustedStart) +
+                    segmentText.slice(0, finalStart) +
                     '<span class="searchTerm">' +
-                    segmentText.slice(adjustedStart, adjustedEnd) +
+                    segmentText.slice(finalStart, finalEnd) +
                     '</span>' +
-                    segmentText.slice(adjustedEnd);
+                    segmentText.slice(finalEnd);
 
                 segment.data.element.innerHTML = segmentText;
             }
