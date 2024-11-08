@@ -274,46 +274,36 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
 
                 let segmentText = segment.data.originalHtml;
                 
-                // Recalculer les positions en tenant compte des balises <a> supprimées
+                // Calculer les positions en tenant compte des balises HTML
                 let adjustedStart = segmentMatchStart;
                 let adjustedEnd = segmentMatchEnd;
+                let nbspOffset = 0;
 
-                // Ajuster les positions pour préserver l'intégrité des mots
-                const words = segmentText.split(/(\s+)/);
-                let currentPos = 0;
-                let finalStart = 0;
-                let finalEnd = segmentText.length;
+                // Compter les &nbsp; avant la position de début
+                const nbspBeforeStart = (segmentText.slice(0, adjustedStart).match(/&nbsp;/g) || []).length;
+                const nbspInMatch = (segmentText.slice(adjustedStart, adjustedEnd).match(/&nbsp;/g) || []).length;
 
-                for (let i = 0; i < words.length; i++) {
-                    const word = words[i];
-                    const nextPos = currentPos + word.length;
+                // Ajuster les positions en fonction des &nbsp;
+                adjustedStart += nbspBeforeStart * 5; // 5 est la différence entre "&nbsp;" (6 caractères) et " " (1 caractère)
+                adjustedEnd += (nbspBeforeStart + nbspInMatch) * 5;
 
-                    if (currentPos <= adjustedStart && nextPos > adjustedStart) {
-                        finalStart = currentPos;
-                    }
-                    if (currentPos < adjustedEnd && nextPos >= adjustedEnd) {
-                        finalEnd = nextPos;
-                    }
-
-                    currentPos = nextPos;
-                }
-
+                // Ajuster pour les balises <a>
                 segment.data.tags.forEach(tag => {
-                    if (tag.start < finalStart) {
-                        finalStart += tag.end - tag.start;
+                    if (tag.start < adjustedStart) {
+                        adjustedStart += tag.end - tag.start;
                     }
-                    if (tag.start < finalEnd) {
-                        finalEnd += tag.end - tag.start;
+                    if (tag.start < adjustedEnd) {
+                        adjustedEnd += tag.end - tag.start;
                     }
                 });
 
-                // Ajouter la mise en surbrillance
+                // Ajouter le highlighting
                 segmentText = 
-                    segmentText.slice(0, finalStart) +
+                    segmentText.slice(0, adjustedStart) +
                     '<span class="searchTerm">' +
-                    segmentText.slice(finalStart, finalEnd) +
+                    segmentText.slice(adjustedStart, adjustedEnd) +
                     '</span>' +
-                    segmentText.slice(finalEnd);
+                    segmentText.slice(adjustedEnd);
 
                 segment.data.element.innerHTML = segmentText;
             }
