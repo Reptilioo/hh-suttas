@@ -26,6 +26,7 @@ function handleCommentSearch(commentId, searchTerm) {
     
     const workingElement = commentElement.cloneNode(true);
     
+    // Remove end links before processing
     const endLinks = Array.from(workingElement.querySelectorAll('a'))
         .filter(a => a.textContent === '←')
         .map(a => a.outerHTML);
@@ -38,7 +39,7 @@ function handleCommentSearch(commentId, searchTerm) {
     let currentText = '';
     
     function processNode(node) {
-        if (node.nodeType === 3) {
+        if (node.nodeType === 3) { // Text node
             const text = node.textContent;
             const startPos = currentText.length;
             currentText += text;
@@ -48,19 +49,8 @@ function handleCommentSearch(commentId, searchTerm) {
                 start: startPos,
                 length: text.length
             });
-        } else if (node.nodeType === 1) {
-            if (node.tagName === 'EM') {
-                const text = node.textContent;
-                const startPos = currentText.length;
-                currentText += text;
-                textParts.push({
-                    type: 'em',
-                    text: text,
-                    html: node.outerHTML,
-                    start: startPos,
-                    length: text.length
-                });
-            } else if (node.tagName === 'A' && node.textContent !== '←') {
+        } else if (node.nodeType === 1) { // Element node
+            if (node.tagName === 'A' && node.textContent !== '←') {
                 const text = node.textContent;
                 const startPos = currentText.length;
                 currentText += text;
@@ -85,11 +75,12 @@ function handleCommentSearch(commentId, searchTerm) {
     const normalizedSearchTerm = normalizeText(searchTerm);
     const normalizedText = normalizeText(currentText);
     
+    // Find all matches without overlap
     const matches = [];
-    let searchIndex = 0;
+    let lastEnd = 0;
     
     while (true) {
-        const matchIndex = normalizedText.indexOf(normalizedSearchTerm, searchIndex);
+        const matchIndex = normalizedText.indexOf(normalizedSearchTerm, lastEnd);
         if (matchIndex === -1) break;
         
         matches.push({
@@ -97,79 +88,57 @@ function handleCommentSearch(commentId, searchTerm) {
             end: matchIndex + normalizedSearchTerm.length
         });
         
-        searchIndex = matchIndex + 1;
+        lastEnd = matchIndex + normalizedSearchTerm.length;
     }
     
     if (matches.length === 0) return;
     
     let result = '';
     let currentPos = 0;
+    let inHighlight = false;
     
     for (const part of textParts) {
-        let addedToHighlight = false;
+        let partResult = '';
+        let partStart = part.start;
+        let partEnd = part.start + part.length;
         
+        // Check if this part overlaps with any matches
+        let hasMatch = false;
         for (const match of matches) {
-            const matchStart = match.start;
-            const matchEnd = match.end;
-            
-            if (part.start + part.length > matchStart && part.start < matchEnd) {
-                if (!addedToHighlight) {
-                    if (part.type === 'a') {
-                        // For links, we put the highlight inside
-                        const linkStart = matchStart - part.start;
-                        const linkEnd = Math.min(part.length, matchEnd - part.start);
-                        
-                        // If the match starts before the link
-                        if (linkStart < 0) {
-                            result = result.slice(0, result.length + linkStart);
-                            result += '<span class="searchTerm">' + 
-                                     currentText.slice(matchStart, part.start) + 
-                                     '</span>';
-                            result += `<a href="${part.href}"><span class="searchTerm">` +
-                                     part.text +
-                                     '</span></a>';
-                        } else {
-                            result += `<a href="${part.href}"><span class="searchTerm">` +
-                                     part.text.slice(linkStart, linkEnd) +
-                                     '</span></a>';
-                        }
-                    } else {
-                        if (part.start <= matchStart) {
-                            result += part.text.slice(0, matchStart - part.start);
-                            result += '<span class="searchTerm">';
-                        }
-                        
-                        if (part.type === 'text') {
-                            result += part.text.slice(
-                                Math.max(0, matchStart - part.start),
-                                Math.min(part.length, matchEnd - part.start)
-                            );
-                        } else {
-                            result += part.html;
-                        }
-                        
-                        if (part.start + part.length >= matchEnd) {
-                            result += '</span>';
-                            result += part.text.slice(matchEnd - part.start);
-                        }
-                    }
+            if (partEnd > match.start && partStart < match.end) {
+                hasMatch = true;
+                
+                if (part.type === 'a') {
+                    // Handle link specially - wrap the entire link content
+                    partResult = `<a href="${part.href}"><span class="searchTerm">${part.text}</span></a>`;
+                } else {
+                    // For text nodes, determine exact overlap
+                    const highlightStart = Math.max(0, match.start - partStart);
+                    const highlightEnd = Math.min(part.length, match.end - partStart);
                     
-                    addedToHighlight = true;
+                    if (highlightStart > 0) {
+                        partResult += part.text.slice(0, highlightStart);
+                    }
+                    partResult += '<span class="searchTerm">' + 
+                                 part.text.slice(highlightStart, highlightEnd) + 
+                                 '</span>';
+                    if (highlightEnd < part.length) {
+                        partResult += part.text.slice(highlightEnd);
+                    }
                 }
+                break;
             }
         }
         
-        if (!addedToHighlight) {
-            if (part.type === 'text') {
-                result += part.text;
-            } else if (part.type === 'a') {
-                result += `<a href="${part.href}">${part.text}</a>`;
-            } else {
-                result += part.html;
-            }
+        if (!hasMatch) {
+            // If no match, use original content
+            partResult = part.type === 'a' ? part.html : part.text;
         }
+        
+        result += partResult;
     }
     
+    // Add back the end links
     result += '\n                ' + endLinks.join('\n                ') + '\n                ';
     
     commentElement.querySelector('span').innerHTML = result;
