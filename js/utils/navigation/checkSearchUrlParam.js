@@ -290,29 +290,49 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
     }
 }
 
+function getVerseNumber(verse) {
+    // Gérer le cas des versets composés comme "mn28:29-30.1"
+    if (verse.includes('-')) {
+        // Pour les versets composés, on prend le premier numéro
+        verse = verse.split('-')[0];
+    }
+    
+    const parts = verse.match(/(\d+)(?::(\d+))?(?:\.(\d+))?$/);
+    if (!parts) return 0;
+    
+    return parseInt(parts[1]) * 10000 + 
+           (parts[2] ? parseInt(parts[2]) * 100 : 0) + 
+           (parts[3] ? parseInt(parts[3]) : 0);
+}
+
+function getVersePrefix(verse) {
+    return verse.match(/^[a-z]+/i)[0];
+}
+
 function getSegmentsBetweenVerses(verseRange) {
     const [startVerse, endVerse] = verseRange.split('-');
     
-    const getVerseNumber = (verse) => {
-        const parts = verse.match(/(\d+)(?::(\d+))?(?:\.(\d+))?$/);
-        if (!parts) return 0;
-        return parseInt(parts[1]) * 10000 + 
-               (parts[2] ? parseInt(parts[2]) * 100 : 0) + 
-               (parts[3] ? parseInt(parts[3]) : 0);
-    };
-    
-    const getVersePrefix = (verse) => {
-        return verse.match(/^[a-z]+/i)[0];
-    };
-    
+    // Extraire les composants du verset de début
+    const startPrefix = getVersePrefix(startVerse);
     const startNum = getVerseNumber(startVerse);
-    const endNum = getVerseNumber(endVerse);
-    const prefix = getVersePrefix(startVerse);
+    
+    // Extraire les composants du verset de fin
+    let endPrefix = startPrefix;  // Par défaut, même préfixe
+    let endVerseParts = endVerse.match(/^(?:([a-z]+):)?(.+)$/i);
+    
+    if (endVerseParts && endVerseParts[1]) {
+        endPrefix = endVerseParts[1];  // Si un préfixe est spécifié
+    }
+    const endNum = getVerseNumber(endVerseParts ? endVerseParts[2] : endVerse);
     
     return Array.from(document.querySelectorAll('.segment'))
         .filter(segment => {
             const id = segment.getAttribute('id');
-            if (!id || !id.startsWith(prefix)) return false;
+            if (!id) return false;
+            
+            // Vérifier si l'ID commence par l'un des préfixes
+            const prefix = getVersePrefix(id);
+            if (prefix !== startPrefix && prefix !== endPrefix) return false;
             
             const verseNum = getVerseNumber(id);
             return verseNum >= startNum && verseNum <= endNum;
