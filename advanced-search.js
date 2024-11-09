@@ -441,8 +441,10 @@ const escapeRegExp = (string) => {
 };
 
 const cleanVerse = (text) => {
-    // Clean words or groups of words surrounded by _ or * (with diacritics support)
+    // Clean words or groups of words surrounded by _ or *
     text = text.replace(/[_*]([^_*]+)[_*]/g, '$1');
+    // Clean em tags
+    text = text.replace(/<em>([^<]+)<\/em>/g, '$1');
     // Clean markdown links
     text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
     return text;
@@ -519,10 +521,12 @@ class SuttaSearch {
 
     // Clean markdown formatting but preserve diacritics
     cleanMarkdownOnly(text) {
-        // Remove markdown formatting
-        text = text.replace(/[_*]([^_*]+)[_*]/g, '$1');
-        // Clean markdown links
-        text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+        // Remove markdown formatting and em tags
+        text = text
+            .replace(/[_*]([^_*]+)[_*]/g, '$1')  // Remove _text_ and *text*
+            .replace(/<em>([^<]+)<\/em>/g, '$1')  // Remove <em>text</em>
+            // Clean markdown links
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
         return text;
     }
 
@@ -716,160 +720,178 @@ class SuttaSearch {
 		}
 	}
 
-	async findMatches(searchTerm, strict = false, isComment = false, singleResult = false, resultCallback) {
-    const maxWords = (this.pali ? 100 : 150);
-    const maxResults = (singleResult ? 1 : 10);
-    
-    // Handle both types of ellipsis by creating two search terms if needed
-    let searchTerms = [searchTerm];
-    if (searchTerm.includes('...')) {
-        searchTerms = [
-            searchTerm,
-            searchTerm.replace(/\.\.\./g, '…')  // Replace ASCII ellipsis with Unicode ellipsis
-        ];
-    } else if (searchTerm.includes('…')) {
-        searchTerms = [
-            searchTerm,
-            searchTerm.replace(/…/g, '...')  // Replace Unicode ellipsis with ASCII ellipsis
-        ];
-    }
-
-    const results = [];
-    
-    for (let term of searchTerms) {
-        // Normalize the search term
-        const normalizedSearchTerm = this.normalizeText(term);
-
-        let searchPattern;
-        if (strict) {
-            // In strict mode, search for the exact term, possibly with attached punctuation
-            searchPattern = '(?<=^|\\s)' + escapeRegExp(normalizedSearchTerm.trim()) + '(?=$|\\s|[.,!?;"""\'`()\\]}:/—_-])';
-        } else {
-            searchPattern = escapeRegExp(normalizedSearchTerm.trim());
+	 async findMatches(searchTerm, strict = false, isComment = false, singleResult = false, resultCallback) {
+        const maxWords = (this.pali ? 100 : 150);
+        const maxResults = (singleResult ? 1 : 10);
+        
+        // Handle both types of apostrophes and ellipsis
+        let searchTerms = [];
+        
+        // Handle apostrophes
+        if (searchTerm.includes('’') || searchTerm.includes('\'')) {
+            // Create variants with both types of apostrophes
+            searchTerms.push(searchTerm);
+            searchTerms.push(searchTerm.replace(/'/g, '’'));
+            searchTerms.push(searchTerm.replace(/'/g, '\''));
+        }
+        
+        // Handle ellipsis
+        if (searchTerm.includes('...')) {
+            const baseTerms = searchTerms.length > 0 ? searchTerms : [searchTerm];
+            searchTerms = [];
+            for (let term of baseTerms) {
+                searchTerms.push(term);
+                searchTerms.push(term.replace(/\.\.\./g, '…'));
+            }
+        } else if (searchTerm.includes('…')) {
+            const baseTerms = searchTerms.length > 0 ? searchTerms : [searchTerm];
+            searchTerms = [];
+            for (let term of baseTerms) {
+                searchTerms.push(term);
+                searchTerms.push(term.replace(/…/g, '...'));
+            }
+        }
+        
+        // If no special characters were found, just use the original search term
+        if (searchTerms.length === 0) {
+            searchTerms = [searchTerm];
         }
 
-        const regex = new RegExp(searchPattern, 'gi');
-        let match;
+        const results = [];
+        const seenResults = new Set(); // To track unique results
+        
+        for (let term of searchTerms) {
+            // Normalize the search term
+            const normalizedSearchTerm = this.normalizeText(term);
 
-        while ((match = regex.exec(this.processedText)) !== null) {
-            const matchStart = match.index;
-            const matchEnd = matchStart + match[0].length;
-
-            const originalMatch = this.findOriginalTextMatch(matchStart, matchEnd);
-            if (!originalMatch) continue;
-
-            let result;
-            if (isComment) {
-                let verseKey = '';
-                let verseStart = 0;
-
-                for (const [pos, key] of this.versePositions.entries()) {
-                    if (pos <= originalMatch.start) {
-                        verseKey = key;
-                        verseStart = pos;
-                    }
-                }
-
-                const verseText = this.cleanedVerses.get(verseKey);
-                const verseEnd = verseStart + verseText.length;
-
-                if (verseText.split(/\s+/).length > maxWords) {
-                    const verseOffset = originalMatch.start - verseStart;
-                    const words = verseText.split(/\s+/);
-                    const matchWordIndex = verseText.substring(0, verseOffset).split(/\s+/).length;
-
-                    const targetWordsBeforeMatch = Math.floor((maxWords - term.split(/\s+/).length) / 2);
-                    let startWord = Math.max(0, matchWordIndex - targetWordsBeforeMatch);
-                    let endWord = Math.min(words.length, startWord + maxWords);
-
-                    if (startWord + maxWords > words.length) {
-                        startWord = Math.max(0, words.length - maxWords);
-                        endWord = words.length;
-                    }
-
-                    const passageStart = verseStart + words.slice(0, startWord).join(' ').length + (startWord > 0 ? 1 : 0);
-                    const passageEnd = verseStart + words.slice(0, endWord).join(' ').length;
-
-                    result = {
-                        passage: this.getPassage(passageStart, passageEnd, originalMatch.start, originalMatch.end, true),
-                        commentNb: this.getCommentNumber(verseKey)
-                    };
-                } else {
-                    result = {
-                        passage: this.getPassage(verseStart, verseEnd, originalMatch.start, originalMatch.end, true),
-                        commentNb: this.getCommentNumber(verseKey)
-                    };
-                }
+            let searchPattern;
+            if (strict) {
+                // In strict mode, search for the exact term, possibly with attached punctuation
+                searchPattern = '(?<=^|\\s)' + escapeRegExp(normalizedSearchTerm.trim()) + '(?=$|\\s|[.,!?;"""\'`’()\\]}:/—_-])';
             } else {
-                const searchTermWords = normalizedSearchTerm.trim().split(/\s+/);
-                const searchTermLength = searchTermWords.length;
-
-                if (searchTermLength > maxWords) {
-                    const passageStart = this.findWordBoundary(this.fullText, originalMatch.start, 'backward');
-                    const passageEnd = this.findWordBoundary(this.fullText, originalMatch.end, 'forward');
-
-                    result = {
-                        passage: this.getPassage(passageStart, passageEnd, originalMatch.start, originalMatch.end),
-                        verseRange: this.findVerseRange(passageStart, passageEnd)
-                    };
-                } else {
-                    const words = this.fullText.split(/\s+/);
-                    const totalWords = words.length;
-                    const matchWordPosition = this.fullText.substring(0, originalMatch.start).split(/\s+/).length;
-                    const matchLength = searchTermWords.length;
-
-                    const targetWordsBeforeMatch = Math.floor((maxWords - matchLength) / 2);
-                    let startWord = Math.max(0, matchWordPosition - targetWordsBeforeMatch);
-                    let endWord = Math.min(totalWords, startWord + maxWords);
-
-                    if (startWord + maxWords > totalWords) {
-                        startWord = Math.max(0, totalWords - maxWords);
-                        endWord = totalWords;
-                    }
-                    if (startWord < 0) {
-                        startWord = 0;
-                        endWord = Math.min(totalWords, maxWords);
-                    }
-
-                    const passageStart = words.slice(0, startWord).join(' ').length;
-                    const passageEnd = words.slice(0, endWord).join(' ').length + 1;
-
-                    result = {
-                        passage: this.getPassage(passageStart, passageEnd, originalMatch.start, originalMatch.end),
-                        verseRange: this.findVerseRange(passageStart, passageEnd)
-                    };
-                }
+                searchPattern = escapeRegExp(normalizedSearchTerm.trim());
             }
 
-            // Check if this result is already in the results array
-            const isDuplicate = results.some(existingResult => {
+            const regex = new RegExp(searchPattern, 'gi');
+            let match;
+
+            while ((match = regex.exec(this.processedText)) !== null) {
+                const matchStart = match.index;
+                const matchEnd = matchStart + match[0].length;
+
+                const originalMatch = this.findOriginalTextMatch(matchStart, matchEnd);
+                if (!originalMatch) continue;
+
+                let result;
                 if (isComment) {
-                    return existingResult.commentNb === result.commentNb && 
-                           existingResult.passage === result.passage;
+                    let verseKey = '';
+                    let verseStart = 0;
+
+                    for (const [pos, key] of this.versePositions.entries()) {
+                        if (pos <= originalMatch.start) {
+                            verseKey = key;
+                            verseStart = pos;
+                        }
+                    }
+
+                    const verseText = this.cleanedVerses.get(verseKey);
+                    const verseEnd = verseStart + verseText.length;
+
+                    if (verseText.split(/\s+/).length > maxWords) {
+                        const verseOffset = originalMatch.start - verseStart;
+                        const words = verseText.split(/\s+/);
+                        const matchWordIndex = verseText.substring(0, verseOffset).split(/\s+/).length;
+
+                        const targetWordsBeforeMatch = Math.floor((maxWords - term.split(/\s+/).length) / 2);
+                        let startWord = Math.max(0, matchWordIndex - targetWordsBeforeMatch);
+                        let endWord = Math.min(words.length, startWord + maxWords);
+
+                        if (startWord + maxWords > words.length) {
+                            startWord = Math.max(0, words.length - maxWords);
+                            endWord = words.length;
+                        }
+
+                        const passageStart = verseStart + words.slice(0, startWord).join(' ').length + (startWord > 0 ? 1 : 0);
+                        const passageEnd = verseStart + words.slice(0, endWord).join(' ').length;
+
+                        result = {
+                            passage: this.getPassage(passageStart, passageEnd, originalMatch.start, originalMatch.end, true),
+                            commentNb: this.getCommentNumber(verseKey)
+                        };
+                    } else {
+                        result = {
+                            passage: this.getPassage(verseStart, verseEnd, originalMatch.start, originalMatch.end, true),
+                            commentNb: this.getCommentNumber(verseKey)
+                        };
+                    }
                 } else {
-                    return existingResult.verseRange === result.verseRange && 
-                           existingResult.passage === result.passage;
-                }
-            });
+                    const searchTermWords = normalizedSearchTerm.trim().split(/\s+/);
+                    const searchTermLength = searchTermWords.length;
 
-            if (!isDuplicate) {
-                // Call the callback with the individual result
-                if (resultCallback) {
-                    await resultCallback(result);
-                }
-                
-                results.push(result);
+                    if (searchTermLength > maxWords) {
+                        const passageStart = this.findWordBoundary(this.fullText, originalMatch.start, 'backward');
+                        const passageEnd = this.findWordBoundary(this.fullText, originalMatch.end, 'forward');
 
-                if (results.length >= maxResults) break;
+                        result = {
+                            passage: this.getPassage(passageStart, passageEnd, originalMatch.start, originalMatch.end),
+                            verseRange: this.findVerseRange(passageStart, passageEnd)
+                        };
+                    } else {
+                        const words = this.fullText.split(/\s+/);
+                        const totalWords = words.length;
+                        const matchWordPosition = this.fullText.substring(0, originalMatch.start).split(/\s+/).length;
+                        const matchLength = searchTermWords.length;
+
+                        const targetWordsBeforeMatch = Math.floor((maxWords - matchLength) / 2);
+                        let startWord = Math.max(0, matchWordPosition - targetWordsBeforeMatch);
+                        let endWord = Math.min(totalWords, startWord + maxWords);
+
+                        if (startWord + maxWords > totalWords) {
+                            startWord = Math.max(0, totalWords - maxWords);
+                            endWord = totalWords;
+                        }
+                        if (startWord < 0) {
+                            startWord = 0;
+                            endWord = Math.min(totalWords, maxWords);
+                        }
+
+                        const passageStart = words.slice(0, startWord).join(' ').length;
+                        const passageEnd = words.slice(0, endWord).join(' ').length + 1;
+
+                        result = {
+                            passage: this.getPassage(passageStart, passageEnd, originalMatch.start, originalMatch.end),
+                            verseRange: this.findVerseRange(passageStart, passageEnd)
+                        };
+                    }
+                }
+
+                // Create a unique key for the result to avoid duplicates
+                const resultKey = isComment ? 
+                    `${result.commentNb}-${result.passage}` :
+                    `${result.verseRange}-${result.passage}`;
+
+                if (!seenResults.has(resultKey)) {
+                    seenResults.add(resultKey);
+                    
+                    // Call the callback with the individual result
+                    if (resultCallback) {
+                        await resultCallback(result);
+                    }
+                    
+                    results.push(result);
+
+                    if (results.length >= maxResults) break;
+                }
             }
+
+            // If we have enough results, break out of the outer loop
+            if (results.length >= maxResults) break;
         }
 
-        // If we have enough results, break out of the outer loop
-        if (results.length >= maxResults) break;
+        return results;
     }
 
-    return results;
-}
+
 
     findOriginalTextMatch(processedMatchStart, processedMatchEnd) {
 		// Use the position map to find the original positions
