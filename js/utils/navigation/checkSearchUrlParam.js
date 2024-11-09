@@ -100,20 +100,39 @@ function handleCommentSearch(commentId, searchTerm) {
     const normalizedSearchTerm = normalizeText(searchTerm);
     const normalizedText = normalizeText(currentText);
     
-    // Find all matches without overlap
+    // Create alternate search terms for different ellipsis characters
+    const searchTerms = [normalizedSearchTerm];
+    if (normalizedSearchTerm.includes('...')) {
+        searchTerms.push(normalizedSearchTerm.replace(/\.\.\./g, '…'));
+    } else if (normalizedSearchTerm.includes('…')) {
+        searchTerms.push(normalizedSearchTerm.replace(/…/g, '...'));
+    }
+    
+    // Find all matches without overlap for all search terms
     const matches = [];
     let lastEnd = 0;
     
     while (true) {
-        const matchIndex = normalizedText.indexOf(normalizedSearchTerm, lastEnd);
-        if (matchIndex === -1) break;
+        let bestMatch = -1;
+        let bestMatchTerm = null;
+        
+        // Find the earliest match among all search terms
+        for (const term of searchTerms) {
+            const matchIndex = normalizedText.indexOf(term, lastEnd);
+            if (matchIndex !== -1 && (bestMatch === -1 || matchIndex < bestMatch)) {
+                bestMatch = matchIndex;
+                bestMatchTerm = term;
+            }
+        }
+        
+        if (bestMatch === -1) break;
         
         matches.push({
-            start: matchIndex,
-            end: matchIndex + normalizedSearchTerm.length
+            start: bestMatch,
+            end: bestMatch + bestMatchTerm.length
         });
         
-        lastEnd = matchIndex + normalizedSearchTerm.length;
+        lastEnd = bestMatch + bestMatchTerm.length;
     }
     
     if (matches.length === 0) return;
@@ -270,7 +289,7 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
         combinedText += data.searchText;
     });
 
-    const normalizeText = text => {
+	const normalizeText = text => {
         let normalized = text.toLowerCase();
         if (isPali) {
             normalized = removeDiacritics(normalized);
@@ -281,17 +300,38 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
     const normalizedSearchTerm = normalizeText(searchTerm);
     const normalizedText = normalizeText(combinedText);
 
+    // Create alternate search terms for different ellipsis characters
+    const searchTerms = [normalizedSearchTerm];
+    if (normalizedSearchTerm.includes('...')) {
+        searchTerms.push(normalizedSearchTerm.replace(/\.\.\./g, '…'));
+    } else if (normalizedSearchTerm.includes('…')) {
+        searchTerms.push(normalizedSearchTerm.replace(/…/g, '...'));
+    }
+
     let lastMatchIndex = 0;
     const matches = [];
 
     while (true) {
-        const matchIndex = normalizedText.indexOf(normalizedSearchTerm, lastMatchIndex);
-        if (matchIndex === -1) break;
+        let bestMatch = -1;
+        let bestMatchTerm = null;
+        
+        // Find the earliest match among all search terms
+        for (const term of searchTerms) {
+            const matchIndex = normalizedText.indexOf(term, lastMatchIndex);
+            if (matchIndex !== -1 && (bestMatch === -1 || matchIndex < bestMatch)) {
+                bestMatch = matchIndex;
+                bestMatchTerm = term;
+            }
+        }
+        
+        if (bestMatch === -1) break;
+        
         matches.push({
-            start: matchIndex,
-            end: matchIndex + normalizedSearchTerm.length
+            start: bestMatch,
+            end: bestMatch + bestMatchTerm.length
         });
-        lastMatchIndex = matchIndex + normalizedSearchTerm.length;
+        
+        lastMatchIndex = bestMatch + bestMatchTerm.length;
     }
 
     if (!matches.length) return;
