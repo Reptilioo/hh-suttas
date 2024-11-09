@@ -720,28 +720,43 @@ class SuttaSearch {
     const maxWords = (this.pali ? 100 : 150);
     const maxResults = (singleResult ? 1 : 10);
     
-    // Normalize the search term
-    const normalizedSearchTerm = this.normalizeText(searchTerm);
-    const results = [];
-
-    let searchPattern;
-    if (strict) {
-        // In strict mode, search for the exact term, possibly with attached punctuation
-        // The hyphen should be at the end of the character class
-        searchPattern = '(?<=^|\\s)' + escapeRegExp(normalizedSearchTerm.trim()) + '(?=$|\\s|[.,!?;"“”\'`()\\]}:/—_-])';
-    } else {
-        searchPattern = escapeRegExp(normalizedSearchTerm.trim());
+    // Handle both types of ellipsis by creating two search terms if needed
+    let searchTerms = [searchTerm];
+    if (searchTerm.includes('...')) {
+        searchTerms = [
+            searchTerm,
+            searchTerm.replace(/\.\.\./g, '…')  // Replace ASCII ellipsis with Unicode ellipsis
+        ];
+    } else if (searchTerm.includes('…')) {
+        searchTerms = [
+            searchTerm,
+            searchTerm.replace(/…/g, '...')  // Replace Unicode ellipsis with ASCII ellipsis
+        ];
     }
 
-    const regex = new RegExp(searchPattern, 'gi');
-    let match;
+    const results = [];
+    
+    for (let term of searchTerms) {
+        // Normalize the search term
+        const normalizedSearchTerm = this.normalizeText(term);
 
-    while ((match = regex.exec(this.processedText)) !== null) {
-        const matchStart = match.index;
-        const matchEnd = matchStart + match[0].length;
+        let searchPattern;
+        if (strict) {
+            // In strict mode, search for the exact term, possibly with attached punctuation
+            searchPattern = '(?<=^|\\s)' + escapeRegExp(normalizedSearchTerm.trim()) + '(?=$|\\s|[.,!?;"""\'`()\\]}:/—_-])';
+        } else {
+            searchPattern = escapeRegExp(normalizedSearchTerm.trim());
+        }
 
-        const originalMatch = this.findOriginalTextMatch(matchStart, matchEnd);
-        if (!originalMatch) continue;
+        const regex = new RegExp(searchPattern, 'gi');
+        let match;
+
+        while ((match = regex.exec(this.processedText)) !== null) {
+            const matchStart = match.index;
+            const matchEnd = matchStart + match[0].length;
+
+            const originalMatch = this.findOriginalTextMatch(matchStart, matchEnd);
+            if (!originalMatch) continue;
 
             let result;
             if (isComment) {
@@ -763,7 +778,7 @@ class SuttaSearch {
                     const words = verseText.split(/\s+/);
                     const matchWordIndex = verseText.substring(0, verseOffset).split(/\s+/).length;
 
-                    const targetWordsBeforeMatch = Math.floor((maxWords - searchTerm.split(/\s+/).length) / 2);
+                    const targetWordsBeforeMatch = Math.floor((maxWords - term.split(/\s+/).length) / 2);
                     let startWord = Math.max(0, matchWordIndex - targetWordsBeforeMatch);
                     let endWord = Math.min(words.length, startWord + maxWords);
 
@@ -826,18 +841,35 @@ class SuttaSearch {
                 }
             }
 
-            // Call the callback with the individual result
-            if (resultCallback) {
-                await resultCallback(result);
-            }
-            
-            results.push(result);
+            // Check if this result is already in the results array
+            const isDuplicate = results.some(existingResult => {
+                if (isComment) {
+                    return existingResult.commentNb === result.commentNb && 
+                           existingResult.passage === result.passage;
+                } else {
+                    return existingResult.verseRange === result.verseRange && 
+                           existingResult.passage === result.passage;
+                }
+            });
 
-            if (results.length >= maxResults) break;
+            if (!isDuplicate) {
+                // Call the callback with the individual result
+                if (resultCallback) {
+                    await resultCallback(result);
+                }
+                
+                results.push(result);
+
+                if (results.length >= maxResults) break;
+            }
         }
 
-        return results;
+        // If we have enough results, break out of the outer loop
+        if (results.length >= maxResults) break;
     }
+
+    return results;
+}
 
     findOriginalTextMatch(processedMatchStart, processedMatchEnd) {
 		// Use the position map to find the original positions
