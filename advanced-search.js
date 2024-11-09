@@ -561,7 +561,7 @@ class SuttaSearch {
             endVerse = this.verseKeys[this.verseKeys.indexOf(endVerse)];
         }
         
-        return `${startVerse}-${endVerse}`;
+        return `${startVerse}_${endVerse}`;
     }
 
 	findWordBoundary(text, position, direction = 'forward') {
