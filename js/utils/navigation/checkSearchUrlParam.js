@@ -32,11 +32,16 @@ function processNode(node, textParts, currentText = '') {
         });
     } else if (node.nodeType === 1) { // Element node
         if (node.tagName === 'A' && node.textContent !== '←') {
-            // Store link as separate part but don't include in searchable text
+            const text = node.textContent;
+            const startPos = currentText.length;
+            currentText += text;
             textParts.push({
-                type: 'link',
+                type: 'a',
+                text: text,
                 html: node.outerHTML,
-                position: currentText.length
+                href: node.getAttribute('href'),
+                start: startPos,
+                length: text.length
             });
         } else {
             for (const child of node.childNodes) {
@@ -220,22 +225,34 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
         const langSpan = segment.querySelector(`span.${langClass}`);
         if (!langSpan) return null;
 
-        const textParts = [];
-        let searchText = '';
-        processNode(langSpan, textParts, searchText);
+        const originalHtml = langSpan.innerHTML;
+        const tags = [];
+        let workingHtml = originalHtml;
+        
+        // Find all <a> tags
+        const linkRegex = /<a[^>]*>.*?<\/a>/g;
+        let match;
+        while ((match = linkRegex.exec(originalHtml)) !== null) {
+            tags.push({
+                start: match.index,
+                end: match.index + match[0].length,
+                tag: match[0]
+            });
+        }
+
+        // Remove <a> tags and normalize HTML spaces
+        const searchText = workingHtml.replace(linkRegex, '')
+                                    .replace(/&nbsp;/g, ' ')
+                                    .replace(/\s+/g, ' ');
 
         // Skip empty or whitespace-only segments
-        const plainText = textParts
-            .filter(part => part.type === 'text')
-            .map(part => part.text)
-            .join('');
-        
-        if (!plainText.trim()) return null;
+        if (!searchText.trim()) return null;
 
         return {
             element: langSpan,
-            textParts,
-            searchText: plainText,
+            searchText,
+            originalHtml,
+            tags,
             id: segment.getAttribute('id')
         };
     }).filter(Boolean);
@@ -289,74 +306,67 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
         });
 
         affectedSegments.forEach(boundary => {
-            const { element, textParts } = boundary.data;
+            const { element, originalHtml, searchText, tags } = boundary.data;
             const segmentStart = boundary.start;
             
             // Calculate the portion of the match that falls within this segment
             const matchStartInSegment = Math.max(0, start - segmentStart);
             const matchEndInSegment = Math.min(boundary.length, end - segmentStart);
 
-            // Build the highlighted HTML
-            let result = '';
+            let highlightedText = '';
             let currentPos = 0;
-            
-            // Sort textParts by position
-            textParts.sort((a, b) => {
-                const posA = a.type === 'link' ? a.position : a.start;
-                const posB = b.type === 'link' ? b.position : b.start;
-                return posA - posB;
+            let lastTagEnd = 0;
+
+            // Sort tags by start position
+            const sortedTags = [...tags].sort((a, b) => a.start - b.start);
+
+            // Process text and tags in order
+            sortedTags.forEach(tag => {
+                // Add text before the tag if any
+                if (tag.start > currentPos) {
+                    const textBeforeTag = searchText.slice(currentPos, tag.start);
+                    highlightedText += applyHighlight(textBeforeTag, 
+                                                    matchStartInSegment - currentPos, 
+                                                    matchEndInSegment - currentPos);
+                }
+
+                // Add the tag
+                highlightedText += tag.tag;
+                currentPos = tag.start;
+                lastTagEnd = tag.end;
             });
 
-            // Process each part in order
-            for (const part of textParts) {
-                if (part.type === 'link') {
-                    // Add links that should appear before the current position
-                    if (part.position <= currentPos) {
-                        result += part.html;
-                    }
-                    continue;
-                }
-
-                const textStart = part.start;
-                const textEnd = textStart + part.text.length;
-
-                // Handle text before the match
-                if (textStart < matchStartInSegment) {
-                    const beforeMatchText = part.text.slice(0, matchStartInSegment - textStart);
-                    result += beforeMatchText;
-                }
-
-                // Handle the matched text
-                if (textEnd > matchStartInSegment && textStart < matchEndInSegment) {
-                    const matchStart = Math.max(0, matchStartInSegment - textStart);
-                    const matchEnd = Math.min(part.text.length, matchEndInSegment - textStart);
-                    
-                    const matchedText = part.text.slice(matchStart, matchEnd);
-                    result += '<span class="searchTerm">' + matchedText + '</span>';
-                    
-                    // Add text after the match if any
-                    if (matchEnd < part.text.length) {
-                        result += part.text.slice(matchEnd);
-                    }
-                } else if (textStart >= matchEndInSegment) {
-                    // Add text that comes after the match
-                    result += part.text;
-                }
-
-                currentPos = textEnd;
+            // Add remaining text after last tag
+            if (currentPos < searchText.length) {
+                const remainingText = searchText.slice(currentPos);
+                highlightedText += applyHighlight(remainingText,
+                                                matchStartInSegment - currentPos,
+                                                matchEndInSegment - currentPos);
             }
 
-            // Add any remaining links that should appear after all text
-            const remainingLinks = textParts
-                .filter(part => part.type === 'link' && part.position > currentPos)
-                .map(part => part.html)
-                .join('');
-            result += remainingLinks;
-
-            // Update the DOM
-            element.innerHTML = result;
+            element.innerHTML = highlightedText;
         });
     });
+}
+
+// Helper function to apply highlight to a text segment
+function applyHighlight(text, highlightStart, highlightEnd) {
+    if (highlightStart >= text.length || highlightEnd <= 0) {
+        return text;
+    }
+
+    highlightStart = Math.max(0, highlightStart);
+    highlightEnd = Math.min(text.length, highlightEnd);
+
+    if (highlightStart >= highlightEnd) {
+        return text;
+    }
+
+    return text.slice(0, highlightStart) +
+           '<span class="searchTerm">' +
+           text.slice(highlightStart, highlightEnd) +
+           '</span>' +
+           text.slice(highlightEnd);
 }
 
 function getVerseNumber(verse) {
