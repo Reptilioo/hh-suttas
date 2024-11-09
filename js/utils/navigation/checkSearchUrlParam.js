@@ -32,16 +32,11 @@ function processNode(node, textParts, currentText = '') {
         });
     } else if (node.nodeType === 1) { // Element node
         if (node.tagName === 'A' && node.textContent !== '←') {
-            const text = node.textContent;
-            const startPos = currentText.length;
-            currentText += text;
+            // Store link as separate part but don't include in searchable text
             textParts.push({
-                type: 'a',
-                text: text,
+                type: 'link',
                 html: node.outerHTML,
-                href: node.getAttribute('href'),
-                start: startPos,
-                length: text.length
+                position: currentText.length
             });
         } else {
             for (const child of node.childNodes) {
@@ -225,34 +220,22 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
         const langSpan = segment.querySelector(`span.${langClass}`);
         if (!langSpan) return null;
 
-        const originalHtml = langSpan.innerHTML;
-        const tags = [];
-        let workingHtml = originalHtml;
-        
-        // Find all <a> tags
-        const linkRegex = /<a[^>]*>.*?<\/a>/g;
-        let match;
-        while ((match = linkRegex.exec(originalHtml)) !== null) {
-            tags.push({
-                start: match.index,
-                end: match.index + match[0].length,
-                tag: match[0]
-            });
-        }
-
-        // Remove <a> tags and normalize HTML spaces
-        const searchText = workingHtml.replace(linkRegex, '')
-                                    .replace(/&nbsp;/g, ' ')
-                                    .replace(/\s+/g, ' ');
+        const textParts = [];
+        let searchText = '';
+        processNode(langSpan, textParts, searchText);
 
         // Skip empty or whitespace-only segments
-        if (!searchText.trim()) return null;
+        const plainText = textParts
+            .filter(part => part.type === 'text')
+            .map(part => part.text)
+            .join('');
+        
+        if (!plainText.trim()) return null;
 
         return {
             element: langSpan,
-            searchText,
-            originalHtml,
-            tags,
+            textParts,
+            searchText: plainText,
             id: segment.getAttribute('id')
         };
     }).filter(Boolean);
@@ -306,32 +289,72 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
         });
 
         affectedSegments.forEach(boundary => {
-            const { element, originalHtml, searchText, tags } = boundary.data;
+            const { element, textParts } = boundary.data;
             const segmentStart = boundary.start;
             
             // Calculate the portion of the match that falls within this segment
             const matchStartInSegment = Math.max(0, start - segmentStart);
             const matchEndInSegment = Math.min(boundary.length, end - segmentStart);
 
-            // Apply highlighting to the segment
-            const beforeMatch = searchText.slice(0, matchStartInSegment);
-            const matchedText = searchText.slice(matchStartInSegment, matchEndInSegment);
-            const afterMatch = searchText.slice(matchEndInSegment);
-
-            let highlightedText = beforeMatch +
-                                '<span class="searchTerm">' +
-                                matchedText +
-                                '</span>' +
-                                afterMatch;
-
-            // Reinsert the tags
-            tags.reverse().forEach(tag => {
-                highlightedText = highlightedText.slice(0, tag.start) +
-                                tag.tag +
-                                highlightedText.slice(tag.start);
+            // Build the highlighted HTML
+            let result = '';
+            let currentPos = 0;
+            
+            // Sort textParts by position
+            textParts.sort((a, b) => {
+                const posA = a.type === 'link' ? a.position : a.start;
+                const posB = b.type === 'link' ? b.position : b.start;
+                return posA - posB;
             });
 
-            element.innerHTML = highlightedText;
+            // Process each part in order
+            for (const part of textParts) {
+                if (part.type === 'link') {
+                    // Add links that should appear before the current position
+                    if (part.position <= currentPos) {
+                        result += part.html;
+                    }
+                    continue;
+                }
+
+                const textStart = part.start;
+                const textEnd = textStart + part.text.length;
+
+                // Handle text before the match
+                if (textStart < matchStartInSegment) {
+                    const beforeMatchText = part.text.slice(0, matchStartInSegment - textStart);
+                    result += beforeMatchText;
+                }
+
+                // Handle the matched text
+                if (textEnd > matchStartInSegment && textStart < matchEndInSegment) {
+                    const matchStart = Math.max(0, matchStartInSegment - textStart);
+                    const matchEnd = Math.min(part.text.length, matchEndInSegment - textStart);
+                    
+                    const matchedText = part.text.slice(matchStart, matchEnd);
+                    result += '<span class="searchTerm">' + matchedText + '</span>';
+                    
+                    // Add text after the match if any
+                    if (matchEnd < part.text.length) {
+                        result += part.text.slice(matchEnd);
+                    }
+                } else if (textStart >= matchEndInSegment) {
+                    // Add text that comes after the match
+                    result += part.text;
+                }
+
+                currentPos = textEnd;
+            }
+
+            // Add any remaining links that should appear after all text
+            const remainingLinks = textParts
+                .filter(part => part.type === 'link' && part.position > currentPos)
+                .map(part => part.html)
+                .join('');
+            result += remainingLinks;
+
+            // Update the DOM
+            element.innerHTML = result;
         });
     });
 }
