@@ -167,6 +167,14 @@ body.dark {
   pointer-events: none;
 }
 
+.advanced-icon{
+  right: 25px;
+  position: relative;
+  margin-top: 2px;
+  color: gray;
+  cursor: pointer;
+}
+
 p {
   margin-bottom: 1.5rem;
 }
