@@ -252,7 +252,7 @@ span.eng-lang {
   margin-top: .4rem;
 }
 
-.eng-lang > .searchTerm,
+.eng-lang .searchTerm,
 .comment-highlight .searchTerm {
 	color: var(--dark-orange);
 	font-family: "RobotoSerif Bold";
@@ -262,12 +262,12 @@ span.eng-lang {
 	text-decoration: underline;
 }
 
-.dark .eng-lang > .searchTerm,
+.dark .eng-lang .searchTerm,
 .dark .comment-highlight .searchTerm {
 	color: var(--light-orange);
 }
 
-.pli-lang > .searchTerm{
+.pli-lang .searchTerm{
 	color: var(--orange);
 	font-weight: bold;
 	font-size: 1.1rem;
