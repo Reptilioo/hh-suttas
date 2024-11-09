@@ -1,6 +1,5 @@
 // Refactor?
 // Need to remove './python/generated/suttas-database-data-hash.txt'
-// Add auto open in new tab
 // Voir dans les deux fichiers s'il n'y a pas des fonctions appelées que dans une fonction qu'on pourrait ajouté directement à la fonction
 
 import db from "./js/dexie/dexie.js";
@@ -10,6 +9,7 @@ import { removeDiacritics } from './js/utils/misc/removeDiacritics.js';
 //Search suttas by search term and language options.
 async function searchSuttasWithStop(searchTerm, options) {
     const availableSuttasJson = await fetchAvailableSuttas();
+	const originalSearch = searchTerm;
     searchTerm = cleanSearchTerm(searchTerm.toLowerCase());
 
     const resultsDiv = document.querySelector('.results');
@@ -26,20 +26,104 @@ async function searchSuttasWithStop(searchTerm, options) {
     let currentIteration = 0;
     let gotResults = false;
 
-    const checkStrictMatch = (text, searchTerm) => {
-        const wordBoundaryRegex = /[\s.,!?;"')\]}\-:/]+/;
-        const words = text.toLowerCase().split(wordBoundaryRegex);
-        return words.includes(searchTerm);
-    };
+	// Clean and normalize search term
+	function normalizeSearchTerm(term) {
+		return term.toLowerCase().trim();
+	}
 
-    const checkTitleMatch = (text, searchTerm, strict) => {
-        if (!text) return false;
-        text = text.toLowerCase();
-        if (strict) {
-            return checkStrictMatch(text, searchTerm);
-        }
-        return text.includes(searchTerm);
-    };
+	// Escape special characters for regex
+	function escapeRegExp(string) {
+		return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	}
+
+	// Helper function to get ID, title and heading
+	function getIdAndTitle(sutta, availableSuttasJson, lang) {
+		const availableSutta = availableSuttasJson[sutta.id] || {};
+		return {
+			id: availableSutta.id || sutta.id.toUpperCase(),
+			title: lang === 'en' ? availableSutta.title : availableSutta.pali_title || "Unknown Title",
+			heading: availableSutta.heading || ""
+		};
+	}
+
+	// Check if text contains search term with punctuation handling
+	function checkStrictMatch(text, searchTerm) {
+		if (!text) return false;
+		
+		// Normalize both text and search term
+		const normalizedText = normalizeSearchTerm(text);
+		const normalizedSearchTerm = normalizeSearchTerm(searchTerm);
+		
+		// Create a regex pattern that matches the search term with optional punctuation
+		const punctuation = '[\\s.,!?;"\'\\)\\]\\}\\-:/]*';
+		const searchPattern = `(^|[\\s.,!?;"'\\(\\[\\{\\-:/]+)${escapeRegExp(normalizedSearchTerm)}(?=${punctuation}($|[\\s.,!?;"'\\(\\[\\{\\-:/]+))`;
+		const regex = new RegExp(searchPattern, 'i');
+		
+		// Check both with and without diacritics
+		return regex.test(normalizedText) || 
+			   regex.test(removeDiacritics(normalizedText));
+	}
+
+	// Check title/heading matches
+	function checkTitleMatch(text, searchTerm, strict) {
+		if (!text) return false;
+		
+		if (strict) {
+			return checkStrictMatch(text, searchTerm);
+		} else {
+			const normalizedText = normalizeSearchTerm(text);
+			const normalizedSearchTerm = normalizeSearchTerm(searchTerm);
+			return normalizedText.includes(normalizedSearchTerm) ||
+				   removeDiacritics(normalizedText).includes(removeDiacritics(normalizedSearchTerm));
+		}
+	}
+
+	// Highlight search term in text, preserving diacritics
+	function highlightSearchTerm(text, searchTerm) {
+		if (!text) return '';
+		
+		const normalizedSearchTerm = normalizeSearchTerm(searchTerm);
+		let result = text;
+		
+		// Function to find and highlight matches while preserving original text
+		const highlightMatches = (text, pattern) => {
+			const matches = [...text.matchAll(pattern)];
+			let highlighted = text;
+			let offset = 0;
+			
+			matches.forEach(match => {
+				const startPos = match.index + offset;
+				const originalText = match[0];
+				const highlightedText = `<b>${originalText}</b>`;
+				highlighted = highlighted.slice(0, startPos) + highlightedText + highlighted.slice(startPos + originalText.length);
+				offset += highlightedText.length - originalText.length;
+			});
+			
+			return highlighted;
+		};
+		
+		// Create patterns for both exact and diacritic-insensitive matching
+		const exactPattern = new RegExp(`(${escapeRegExp(normalizedSearchTerm)})`, 'gi');
+		const diacriticPattern = new RegExp(escapeRegExp(removeDiacritics(normalizedSearchTerm)), 'gi');
+		
+		// First try exact matches
+		result = highlightMatches(result, exactPattern);
+		
+		// If no exact matches found, try matching without diacritics
+		if (!exactPattern.test(text)) {
+			const textWithoutDiacritics = removeDiacritics(text);
+			const matches = [...textWithoutDiacritics.matchAll(diacriticPattern)];
+			
+			matches.forEach(match => {
+				const startPos = match.index;
+				const length = match[0].length;
+				const originalText = text.slice(startPos, startPos + length);
+				result = result.replace(originalText, `<b>${originalText}</b>`);
+			});
+		}
+		
+		return result;
+	}
 	
 	function encodeStringForURL(str) {
 	  // Replace special chars by their encoded equivalent
@@ -66,7 +150,7 @@ async function searchSuttasWithStop(searchTerm, options) {
             let titleMatch = false;
             let displayTitle = title;
 
-            // Check if searchTerm matches title/heading/pali_title using same strict/non-strict logic as content
+            // Check title and heading matches with new matching logic
             if (lang === 'en') {
                 if (checkTitleMatch(title, searchTerm, options['strict']) || 
                     checkTitleMatch(heading, searchTerm, options['strict'])) {
@@ -111,13 +195,13 @@ async function searchSuttasWithStop(searchTerm, options) {
                     // Add main content results with highlighted title if there was a title match
                     for (const result of mainResults) {
 					const link = `${window.location.origin}/?q=${sutta.id}&search=${searchTermUrl}&pali=hide#${result.verseRange}`;
-                        await addResultToDOMAsync(id, titleMatch ? displayTitle : title, result.passage, link);
+                        await addResultToDOMAsync(id, titleMatch ? displayTitle : title, result.passage, link, { target: "_blank" });
                         gotResults = true;
                     }
                     // Add comment results
                     for (const result of commentResults) {
                         const link = `${window.location.origin}/?q=${sutta.id}&search=${searchTermUrl}#comment${result.commentNb}`;
-                        await addResultToDOMAsync(id, `${titleMatch ? displayTitle : title} - Comments`, result.passage, link);
+                        await addResultToDOMAsync(id, `${titleMatch ? displayTitle : title} - Comments`, result.passage, link, { target: "_blank" });
                         gotResults = true;
                     }
                 } 
@@ -125,7 +209,7 @@ async function searchSuttasWithStop(searchTerm, options) {
                 else if (titleMatch) {
                     const firstPassage = getFirstPassage(sutta.translation_en_anigha, 150);
                     const link = `${window.location.origin}/?q=${sutta.id}`;
-                    await addResultToDOMAsync(id, displayTitle, firstPassage, link);
+                    await addResultToDOMAsync(id, displayTitle, firstPassage, link, { target: "_blank" });
                     gotResults = true;
                 }
             } else if (lang === 'pl') {
@@ -137,7 +221,7 @@ async function searchSuttasWithStop(searchTerm, options) {
                     // Add results with highlighted title if there was a title match
                     for (const result of results) {
                         const link = `${window.location.origin}/?q=${sutta.id}&search=${searchTermUrl}&pali=show#${result.verseRange}`;
-                        await addResultToDOMAsync(id, titleMatch ? displayTitle : title, result.passage, link);
+                        await addResultToDOMAsync(id, titleMatch ? displayTitle : title, result.passage, link, { target: "_blank" });
                         gotResults = true;
                     }
                 }
@@ -145,7 +229,7 @@ async function searchSuttasWithStop(searchTerm, options) {
                 else if (titleMatch) {
                     const firstPassage = getFirstPassage(sutta.root_pli_ms, 100);
                     const link = `${window.location.origin}/?q=${sutta.id}`;
-                    await addResultToDOMAsync(id, displayTitle, firstPassage, link);
+                    await addResultToDOMAsync(id, displayTitle, firstPassage, link, { target: "_blank" });
                     gotResults = true;
                 }
             }
@@ -161,7 +245,7 @@ async function searchSuttasWithStop(searchTerm, options) {
     ]);
 
     if (!gotResults) {
-        addResultToDOM("", "No results found", `No results were found with the expression '${searchTerm}'.`, "none");
+        addResultToDOM("", "No results found", `No results were found with the expression: ${originalSearch}`, "none");
     }
 
     loadingBar.style.width = '0%';
@@ -257,17 +341,17 @@ async function getSuttas(db, options, type) {
 	return query.toArray();
 }
 
-function addResultToDOMAsync(id, title, snippet, link) {
+function addResultToDOMAsync(id, title, snippet, link, options) {
 	return new Promise((resolve) => {
 		setTimeout(() => {
-			addResultToDOM(id, title, snippet, link);
+			addResultToDOM(id, title, snippet, link, options);
 			resolve();
 		}, 0);
 	});
 }
 
 // Function to add a result to the DOM
-function addResultToDOM(id, title, snippet, link) {
+function addResultToDOM(id, title, snippet, link, options = {}) {
 	const resultsDiv = document.querySelector('.results');
 	const resultDiv = document.createElement('div');
 	resultDiv.classList.add('result');
@@ -276,6 +360,7 @@ function addResultToDOM(id, title, snippet, link) {
 	if (link != "none") {
 		anchor = document.createElement('a');
 		anchor.href = link;
+		anchor.target = options.target || '_self';
 		anchor.classList.add('link');
 	}
 
