@@ -1,7 +1,7 @@
 // Refactor?
 // Need to remove './python/generated/suttas-database-data-hash.txt'
-// with exact match: Doesn't find "its foundation." or "is the origin of suffering." because of last point
-// checkUrlSearchParam: http://localhost/?q=mn20&search=see+the+comments+in+mn+18#comment2 -> adds 3 nested <span class="searchTerm">
+// Add auto open in new tab
+// Voir dans les deux fichiers s'il n'y a pas des fonctions appelées que dans une fonction qu'on pourrait ajouté directement à la fonction
 
 import db from "./js/dexie/dexie.js";
 import { fetchAvailableSuttas } from "./js/utils/loadContent/fetchAvailableSuttas.js";
@@ -603,42 +603,60 @@ class SuttaSearch {
 	    return passage;
 	}
 
+    findWordBoundary(text, position, direction = 'forward') {
+		// Define characters that can be attached to a word
+		const attachedPunctuation = /[.,!?;"“”'`)\]}\-—_:/]/;
+		const wordBoundaryRegex = /\s/;
+
+		if (direction === 'forward') {
+			// First, find the end of the word, including attached punctuation
+			let pos = position;
+			// Move forward until we find a whitespace
+			while (pos < text.length && !wordBoundaryRegex.test(text[pos])) {
+				pos++;
+			}
+			return pos;
+		} else {
+			// Find the beginning of the word, ignoring attached punctuation
+			let pos = position;
+			// Move backward while we are on punctuation
+			while (pos > 0 && attachedPunctuation.test(text[pos - 1])) {
+				pos--;
+			}
+			// Then move backward until a whitespace is found
+			while (pos > 0 && !wordBoundaryRegex.test(text[pos - 1])) {
+				pos--;
+			}
+			return pos;
+		}
+	}
+
 	async findMatches(searchTerm, strict = false, isComment = false, singleResult = false, resultCallback) {
-        const maxWords = (this.pali ? 100 : 150);
-        const maxResults = (singleResult ? 1 : 10);
-        
-        // Normalize the search term the same way as the text
-        const normalizedSearchTerm = this.normalizeText(searchTerm);
-        const results = [];
+    const maxWords = (this.pali ? 100 : 150);
+    const maxResults = (singleResult ? 1 : 10);
+    
+    // Normalize the search term
+    const normalizedSearchTerm = this.normalizeText(searchTerm);
+    const results = [];
 
-        let searchPattern = escapeRegExp(normalizedSearchTerm.trim());
-        if (strict) {
-            searchPattern = '\\b' + searchPattern + '\\b';
-        }
+    let searchPattern;
+    if (strict) {
+        // In strict mode, search for the exact term, possibly with attached punctuation
+        // The hyphen should be at the end of the character class
+        searchPattern = '(?<=^|\\s)' + escapeRegExp(normalizedSearchTerm.trim()) + '(?=$|\\s|[.,!?;"“”\'`()\\]}:/—_-])';
+    } else {
+        searchPattern = escapeRegExp(normalizedSearchTerm.trim());
+    }
 
-        const regex = new RegExp(searchPattern, 'gi');
-        let match;
+    const regex = new RegExp(searchPattern, 'gi');
+    let match;
 
-        while ((match = regex.exec(this.processedText)) !== null) {
-            if (strict) {
-                const wordBoundaryRegex = /[\s.,!?;"')\]}\-:/]+/;
-                const textBeforeMatch = this.processedText.slice(0, match.index);
-                const textAfterMatch = this.processedText.slice(match.index + match[0].length);
+    while ((match = regex.exec(this.processedText)) !== null) {
+        const matchStart = match.index;
+        const matchEnd = matchStart + match[0].length;
 
-                const isStartOfWord = match.index === 0 || wordBoundaryRegex.test(textBeforeMatch.slice(-1));
-                const isEndOfWord = match.index + match[0].length === this.processedText.length ||
-                                  wordBoundaryRegex.test(textAfterMatch[0]);
-
-                if (!isStartOfWord || !isEndOfWord) {
-                    continue;
-                }
-            }
-
-            const matchStart = match.index;
-            const matchEnd = matchStart + match[0].length;
-
-            const originalMatch = this.findOriginalTextMatch(matchStart, matchEnd);
-            if (!originalMatch) continue;
+        const originalMatch = this.findOriginalTextMatch(matchStart, matchEnd);
+        if (!originalMatch) continue;
 
             let result;
             if (isComment) {
