@@ -1,5 +1,5 @@
 import { removeDiacritics } from './../misc/removeDiacritics.js';
-// http://localhost/?q=mn20&search=etas%C4%81+citta%E1%B9%83#comment7 -> <em> retirés
+
 export function checkSearchUrlParam() {
     const verseRange = window.location.hash.substring(1);
     if (!verseRange) return;
@@ -16,6 +16,65 @@ export function checkSearchUrlParam() {
     } else {
         handleVerseSearch(verseRange, searchTerm, isPali);
     }
+}
+
+function processNode(node, textParts, currentText = '') {
+    if (node.nodeType === 3) { // Text node
+        const text = node.textContent;
+        const startPos = currentText.length;
+        currentText += text;
+        textParts.push({
+            type: 'text',
+            text: text,
+            start: startPos,
+            length: text.length,
+            parentTags: getParentTags(node)
+        });
+    } else if (node.nodeType === 1) { // Element node
+        if (node.tagName === 'A' && node.textContent !== '←') {
+            const text = node.textContent;
+            const startPos = currentText.length;
+            currentText += text;
+            textParts.push({
+                type: 'a',
+                text: text,
+                html: node.outerHTML,
+                href: node.getAttribute('href'),
+                start: startPos,
+                length: text.length
+            });
+        } else {
+            for (const child of node.childNodes) {
+                currentText = processNode(child, textParts, currentText);
+            }
+        }
+    }
+    return currentText;
+}
+
+function getParentTags(node) {
+    const tags = [];
+    let current = node.parentElement;
+    while (current && current.tagName !== 'SPAN') {
+        tags.unshift({
+            name: current.tagName.toLowerCase(),
+            attributes: Array.from(current.attributes).reduce((acc, attr) => {
+                acc[attr.name] = attr.value;
+                return acc;
+            }, {})
+        });
+        current = current.parentElement;
+    }
+    return tags;
+}
+
+function wrapWithTags(text, tags) {
+    return tags.reduce((wrapped, tag) => {
+        const attrs = Object.entries(tag.attributes)
+            .map(([key, value]) => `${key}="${value}"`)
+            .join(' ');
+        return `<${tag.name}${attrs ? ' ' + attrs : ''}>${wrapped}</${tag.name}>`;
+    }, text);
 }
 
 function handleCommentSearch(commentId, searchTerm) {
@@ -36,41 +95,7 @@ function handleCommentSearch(commentId, searchTerm) {
     });
     
     const textParts = [];
-    let currentText = '';
-    
-    function processNode(node) {
-        if (node.nodeType === 3) { // Text node
-            const text = node.textContent;
-            const startPos = currentText.length;
-            currentText += text;
-            textParts.push({
-                type: 'text',
-                text: text,
-                start: startPos,
-                length: text.length
-            });
-        } else if (node.nodeType === 1) { // Element node
-            if (node.tagName === 'A' && node.textContent !== '←') {
-                const text = node.textContent;
-                const startPos = currentText.length;
-                currentText += text;
-                textParts.push({
-                    type: 'a',
-                    text: text,
-                    html: node.outerHTML,
-                    href: node.getAttribute('href'),
-                    start: startPos,
-                    length: text.length
-                });
-            } else {
-                for (const child of node.childNodes) {
-                    processNode(child);
-                }
-            }
-        }
-    }
-    
-    processNode(workingElement);
+    const currentText = processNode(workingElement, textParts);
     
     const normalizedSearchTerm = normalizeText(searchTerm);
     const normalizedText = normalizeText(currentText);
@@ -95,7 +120,6 @@ function handleCommentSearch(commentId, searchTerm) {
     
     let result = '';
     let currentPos = 0;
-    let inHighlight = false;
     
     for (const part of textParts) {
         let partResult = '';
@@ -109,21 +133,42 @@ function handleCommentSearch(commentId, searchTerm) {
                 hasMatch = true;
                 
                 if (part.type === 'a') {
-                    // Handle link specially - wrap the entire link content
-                    partResult = `<a href="${part.href}"><span class="searchTerm">${part.text}</span></a>`;
+                    // Find the exact part that matches in the link
+                    const linkText = part.text;
+                    const matchStartInLink = Math.max(0, match.start - partStart);
+                    const matchEndInLink = Math.min(part.length, match.end - partStart);
+                    
+                    // Split the link text into three parts: before, during, and after the match
+                    const beforeMatch = linkText.substring(0, matchStartInLink);
+                    const matchedText = linkText.substring(matchStartInLink, matchEndInLink);
+                    const afterMatch = linkText.substring(matchEndInLink);
+                    
+                    // Build the link with only the matching part highlighted
+                    partResult = `<a href="${part.href}">${beforeMatch}<span class="searchTerm">${matchedText}</span>${afterMatch}</a>`;
                 } else {
-                    // For text nodes, determine exact overlap
+                    // For text nodes, determine the exact overlap
                     const highlightStart = Math.max(0, match.start - partStart);
                     const highlightEnd = Math.min(part.length, match.end - partStart);
                     
+                    let text = part.text;
                     if (highlightStart > 0) {
-                        partResult += part.text.slice(0, highlightStart);
+                        text = text.slice(0, highlightStart) +
+                              '<span class="searchTerm">' +
+                              text.slice(highlightStart, highlightEnd) +
+                              '</span>' +
+                              text.slice(highlightEnd);
+                    } else {
+                        text = '<span class="searchTerm">' +
+                              text.slice(highlightStart, highlightEnd) +
+                              '</span>' +
+                              text.slice(highlightEnd);
                     }
-                    partResult += '<span class="searchTerm">' + 
-                                 part.text.slice(highlightStart, highlightEnd) + 
-                                 '</span>';
-                    if (highlightEnd < part.length) {
-                        partResult += part.text.slice(highlightEnd);
+                    
+                    // Wrap with parent tags if any
+                    if (part.parentTags && part.parentTags.length > 0) {
+                        partResult = wrapWithTags(text, part.parentTags);
+                    } else {
+                        partResult = text;
                     }
                 }
                 break;
@@ -131,8 +176,14 @@ function handleCommentSearch(commentId, searchTerm) {
         }
         
         if (!hasMatch) {
-            // If no match, use original content
-            partResult = part.type === 'a' ? part.html : part.text;
+            // If no match, use original content with parent tags
+            if (part.type === 'a') {
+                partResult = part.html;
+            } else if (part.parentTags && part.parentTags.length > 0) {
+                partResult = wrapWithTags(part.text, part.parentTags);
+            } else {
+                partResult = part.text;
+            }
         }
         
         result += partResult;
@@ -156,6 +207,8 @@ function normalizeText(text) {
     return normalized;
 }
 
+// ... other functions remain the same ...
+
 function handleVerseSearch(verseRange, searchTerm, isPali) {
     let segments;
     if (verseRange.includes('-')) {
@@ -169,6 +222,7 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
 
     const langClass = isPali ? 'pli-lang' : 'eng-lang';
     
+    // Filter out empty segments and prepare segment data
     const segmentsData = segments.map(segment => {
         const langSpan = segment.querySelector(`span.${langClass}`);
         if (!langSpan) return null;
@@ -193,15 +247,19 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
                                     .replace(/&nbsp;/g, ' ')
                                     .replace(/\s+/g, ' ');
 
+        // Skip empty or whitespace-only segments
+        if (!searchText.trim()) return null;
+
         return {
             element: langSpan,
             searchText,
             originalHtml,
-            tags
+            tags,
+            id: segment.getAttribute('id')
         };
-    }).filter(Boolean);
+    }).filter(Boolean); // Remove null entries
 
-    // Combine all segment text for searching
+    // Combine non-empty segment text for searching
     let combinedText = '';
     const segmentBoundaries = [];
 
@@ -225,108 +283,50 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
     const normalizedSearchTerm = normalizeText(searchTerm);
     const normalizedText = normalizeText(combinedText);
 
-    // Find all matches
-    let searchIndex = 0;
+    let lastMatchIndex = 0;
+    const matches = [];
+
     while (true) {
-        const matchIndex = normalizedText.indexOf(normalizedSearchTerm, searchIndex);
+        const matchIndex = normalizedText.indexOf(normalizedSearchTerm, lastMatchIndex);
         if (matchIndex === -1) break;
+        matches.push({
+            start: matchIndex,
+            end: matchIndex + normalizedSearchTerm.length
+        });
+        lastMatchIndex = matchIndex + normalizedSearchTerm.length;
+    }
 
-        const matchEnd = matchIndex + normalizedSearchTerm.length;
+    if (!matches.length) return;
 
-        // Pour chaque segment affecté
-        segmentBoundaries.forEach(segment => {
-            const segmentEnd = segment.start + segment.length;
-
-            if (matchIndex < segmentEnd && matchEnd > segment.start) {
-                const segmentMatchStart = Math.max(0, matchIndex - segment.start);
-                const segmentMatchEnd = Math.min(segment.length, matchEnd - segment.start);
-
-                let segmentText = segment.data.originalHtml;
-                
-                // Calculer les positions en tenant compte des balises HTML
-                let adjustedStart = segmentMatchStart;
-                let adjustedEnd = segmentMatchEnd;
-                let nbspOffset = 0;
-
-                // Compter les &nbsp; avant la position de début
-                const nbspBeforeStart = (segmentText.slice(0, adjustedStart).match(/&nbsp;/g) || []).length;
-                const nbspInMatch = (segmentText.slice(adjustedStart, adjustedEnd).match(/&nbsp;/g) || []).length;
-
-                // Ajuster les positions en fonction des &nbsp;
-                adjustedStart += nbspBeforeStart * 5; // 5 est la différence entre "&nbsp;" (6 caractères) et " " (1 caractère)
-                adjustedEnd += (nbspBeforeStart + nbspInMatch) * 5;
-
-                // Ajuster pour les balises <a>
-                segment.data.tags.forEach(tag => {
-                    if (tag.start < adjustedStart) {
-                        adjustedStart += tag.end - tag.start;
-                    }
-                    if (tag.start < adjustedEnd) {
-                        adjustedEnd += tag.end - tag.start;
-                    }
-                });
-
-                // Ajouter le highlighting
-                segmentText = 
-                    segmentText.slice(0, adjustedStart) +
-                    '<span class="searchTerm">' +
-                    segmentText.slice(adjustedStart, adjustedEnd) +
-                    '</span>' +
-                    segmentText.slice(adjustedEnd);
-
-                segment.data.element.innerHTML = segmentText;
-            }
+    matches.forEach(({ start, end }) => {
+        const boundary = segmentBoundaries.find(boundary => {
+            return start >= boundary.start &&
+                   start < boundary.start + boundary.length;
         });
 
-        searchIndex = matchIndex + 1;
-    }
-}
+        if (!boundary) return;
 
-function getVerseNumber(verse) {
-    // Handle cases like "mn28:29-30.1" for composite verses
-    if (verse.includes('-')) {
-        // For composite verses, take the first number
-        verse = verse.split('-')[0];
-    }
-    
-    const parts = verse.match(/(\d+)(?::(\d+))?(?:\.(\d+))?$/);
-    if (!parts) return 0;
-    
-    return parseInt(parts[1]) * 10000 + 
-           (parts[2] ? parseInt(parts[2]) * 100 : 0) + 
-           (parts[3] ? parseInt(parts[3]) : 0);
-}
+        const { element, originalHtml, searchText, tags } = boundary.data;
 
-function getVersePrefix(verse) {
-    return verse.match(/^[a-z]+/i)[0];
-}
+        const matchedText = searchText.slice(start - boundary.start, end - boundary.start);
+        const beforeMatch = searchText.slice(0, start - boundary.start);
+        const afterMatch = searchText.slice(end - boundary.start);
 
-function getSegmentsBetweenVerses(verseRange) {
-    const [startVerse, endVerse] = verseRange.split('-');
-    
-    // Extract components of the start verse
-    const startPrefix = getVersePrefix(startVerse);
-    const startNum = getVerseNumber(startVerse);
-    
-    // Extract components of the end verse
-    let endPrefix = startPrefix;  // Default to the same prefix
-    let endVerseParts = endVerse.match(/^(?:([a-z]+):)?(.+)$/i);
-    
-    if (endVerseParts && endVerseParts[1]) {
-        endPrefix = endVerseParts[1];  // If a prefix is specified
-    }
-    const endNum = getVerseNumber(endVerseParts ? endVerseParts[2] : endVerse);
-    
-    return Array.from(document.querySelectorAll('.segment'))
-        .filter(segment => {
-            const id = segment.getAttribute('id');
-            if (!id) return false;
-            
-            // Check if the ID starts with one of the prefixes
-            const prefix = getVersePrefix(id);
-            if (prefix !== startPrefix && prefix !== endPrefix) return false;
-            
-            const verseNum = getVerseNumber(id);
-            return verseNum >= startNum && verseNum <= endNum;
+        let highlightedText = beforeMatch +
+                              '<span class="searchTerm">' +
+                              matchedText +
+                              '</span>' +
+                              afterMatch;
+
+        tags.reverse().forEach(tag => {
+            const tagStart = tag.start - boundary.start;
+            const tagEnd = tag.end - boundary.start;
+
+            highlightedText = highlightedText.slice(0, tagStart) +
+                              tag.tag +
+                              highlightedText.slice(tagStart);
         });
+
+        element.innerHTML = highlightedText;
+    });
 }
