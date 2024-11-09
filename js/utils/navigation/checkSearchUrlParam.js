@@ -207,11 +207,9 @@ function normalizeText(text) {
     return normalized;
 }
 
-// ... other functions remain the same ...
-
 function handleVerseSearch(verseRange, searchTerm, isPali) {
     let segments;
-    if (verseRange.includes('-')) {
+    if (verseRange.includes('_')) {
         segments = getSegmentsBetweenVerses(verseRange);
     } else {
         const segment = document.querySelector(`.segment[id="${verseRange}"]`);
@@ -257,7 +255,7 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
             tags,
             id: segment.getAttribute('id')
         };
-    }).filter(Boolean); // Remove null entries
+    }).filter(Boolean);
 
     // Combine non-empty segment text for searching
     let combinedText = '';
@@ -298,35 +296,91 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
 
     if (!matches.length) return;
 
+    // Process each match and update all affected segments
     matches.forEach(({ start, end }) => {
-        const boundary = segmentBoundaries.find(boundary => {
-            return start >= boundary.start &&
-                   start < boundary.start + boundary.length;
+        // Find all segments that this match spans
+        const affectedSegments = segmentBoundaries.filter(boundary => {
+            const segmentStart = boundary.start;
+            const segmentEnd = boundary.start + boundary.length;
+            return (start < segmentEnd && end > segmentStart);
         });
 
-        if (!boundary) return;
+        affectedSegments.forEach(boundary => {
+            const { element, originalHtml, searchText, tags } = boundary.data;
+            const segmentStart = boundary.start;
+            
+            // Calculate the portion of the match that falls within this segment
+            const matchStartInSegment = Math.max(0, start - segmentStart);
+            const matchEndInSegment = Math.min(boundary.length, end - segmentStart);
 
-        const { element, originalHtml, searchText, tags } = boundary.data;
+            // Apply highlighting to the segment
+            const beforeMatch = searchText.slice(0, matchStartInSegment);
+            const matchedText = searchText.slice(matchStartInSegment, matchEndInSegment);
+            const afterMatch = searchText.slice(matchEndInSegment);
 
-        const matchedText = searchText.slice(start - boundary.start, end - boundary.start);
-        const beforeMatch = searchText.slice(0, start - boundary.start);
-        const afterMatch = searchText.slice(end - boundary.start);
+            let highlightedText = beforeMatch +
+                                '<span class="searchTerm">' +
+                                matchedText +
+                                '</span>' +
+                                afterMatch;
 
-        let highlightedText = beforeMatch +
-                              '<span class="searchTerm">' +
-                              matchedText +
-                              '</span>' +
-                              afterMatch;
+            // Reinsert the tags
+            tags.reverse().forEach(tag => {
+                highlightedText = highlightedText.slice(0, tag.start) +
+                                tag.tag +
+                                highlightedText.slice(tag.start);
+            });
 
-        tags.reverse().forEach(tag => {
-            const tagStart = tag.start - boundary.start;
-            const tagEnd = tag.end - boundary.start;
-
-            highlightedText = highlightedText.slice(0, tagStart) +
-                              tag.tag +
-                              highlightedText.slice(tagStart);
+            element.innerHTML = highlightedText;
         });
-
-        element.innerHTML = highlightedText;
     });
+}
+
+function getVerseNumber(verse) {
+    // Handle cases like "mn28:29-30.1" for composite verses
+    if (verse.includes('-')) {
+        // For composite verses, take the first number
+        verse = verse.split('-')[0];
+    }
+    
+    const parts = verse.match(/(\d+)(?::(\d+))?(?:\.(\d+))?$/);
+    if (!parts) return 0;
+    
+    return parseInt(parts[1]) * 10000 + 
+           (parts[2] ? parseInt(parts[2]) * 100 : 0) + 
+           (parts[3] ? parseInt(parts[3]) : 0);
+}
+
+function getVersePrefix(verse) {
+    return verse.match(/^[a-z]+/i)[0];
+}
+
+function getSegmentsBetweenVerses(verseRange) {
+    const [startVerse, endVerse] = verseRange.split('_');
+    
+    // Extract components of the start verse
+    const startPrefix = getVersePrefix(startVerse);
+    const startNum = getVerseNumber(startVerse);
+    
+    // Extract components of the end verse
+    let endPrefix = startPrefix;  // Default to the same prefix
+    let endVerseParts = endVerse.match(/^(?:([a-z]+):)?(.+)$/i);
+    
+    if (endVerseParts && endVerseParts[1]) {
+        endPrefix = endVerseParts[1];  // If a prefix is specified
+    }
+    const endNum = getVerseNumber(endVerseParts ? endVerseParts[2] : endVerse);
+    
+    return Array.from(document.querySelectorAll('.segment'))
+        .filter(segment => {
+            const id = segment.getAttribute('id');
+            if (!id) return false;
+            
+            // Check if the ID starts with one of the prefixes
+            const prefix = getVersePrefix(id);
+            if (prefix !== startPrefix && prefix !== endPrefix) return false;
+            
+            const verseNum = getVerseNumber(id);
+            return verseNum >= startNum && verseNum <= endNum;
+        });
 }
