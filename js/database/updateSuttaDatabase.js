@@ -24,6 +24,24 @@ function generateSortKey(id) {
   return prefix + paddedId;
 }
 
+function ensureTrailingSpace(translations) {
+  if (!translations) return null;
+  
+  // Create a new object to store modified translations
+  const modifiedTranslations = {};
+  
+  // Iterate through each key-value pair in the translations object
+  Object.entries(translations).forEach(([key, value]) => {
+    if (typeof value === 'string') {
+      modifiedTranslations[key] = value.endsWith(' ') ? value : value + ' ';
+    } else {
+      modifiedTranslations[key] = value;
+    }
+  });
+  
+  return modifiedTranslations;
+}
+
 function runImport(isEmpty) {
   return fetch("../../python/generated/suttas-database-data.json")
     .then(response => response.json())
@@ -34,7 +52,7 @@ function runImport(isEmpty) {
       Object.entries(suttas).forEach(([key, value]) => {
         const enEntry = {
           id: key,
-          translation_en_anigha: value.translation_en_anigha || null,
+          translation_en_anigha: ensureTrailingSpace(value.translation_en_anigha),
           heading: value.heading || null,
           comment: value.comment || null,
           sortKey: generateSortKey(key),
