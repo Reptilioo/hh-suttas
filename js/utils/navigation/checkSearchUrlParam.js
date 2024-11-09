@@ -18,6 +18,8 @@ export function checkSearchUrlParam() {
     }
 }
 
+
+
 function processNode(node, textParts, currentText = '') {
     if (node.nodeType === 3) { // Text node
         const text = node.textContent;
@@ -77,6 +79,30 @@ function wrapWithTags(text, tags) {
     }, text);
 }
 
+// Nouvelle fonction pour générer les variantes de recherche
+function generateSearchVariants(searchTerm) {
+    const variants = [searchTerm];
+    
+    // Gestion des apostrophes
+    if (searchTerm.includes('’')) {
+        variants.push(searchTerm.replace(/'/g, '\''));
+    }
+    if (searchTerm.includes('\'')) {
+        variants.push(searchTerm.replace(/'/g, '’'));
+    }
+    
+    // Gestion des points de suspension
+    variants.forEach(variant => {
+        if (variant.includes('...')) {
+            variants.push(variant.replace(/\.\.\./g, '…'));
+        } else if (variant.includes('…')) {
+            variants.push(variant.replace(/…/g, '...'));
+        }
+    });
+    
+    return [...new Set(variants)]; // Éliminer les doublons
+}
+
 function handleCommentSearch(commentId, searchTerm) {
     const commentElement = document.getElementById(commentId);
     if (!commentElement) return;
@@ -85,7 +111,6 @@ function handleCommentSearch(commentId, searchTerm) {
     
     const workingElement = commentElement.cloneNode(true);
     
-    // Remove end links before processing
     const endLinks = Array.from(workingElement.querySelectorAll('a'))
         .filter(a => a.textContent === '←')
         .map(a => a.outerHTML);
@@ -100,15 +125,9 @@ function handleCommentSearch(commentId, searchTerm) {
     const normalizedSearchTerm = normalizeText(searchTerm);
     const normalizedText = normalizeText(currentText);
     
-    // Create alternate search terms for different ellipsis characters
-    const searchTerms = [normalizedSearchTerm];
-    if (normalizedSearchTerm.includes('...')) {
-        searchTerms.push(normalizedSearchTerm.replace(/\.\.\./g, '…'));
-    } else if (normalizedSearchTerm.includes('…')) {
-        searchTerms.push(normalizedSearchTerm.replace(/…/g, '...'));
-    }
+    // Utiliser la nouvelle fonction pour générer les variantes
+    const searchTerms = generateSearchVariants(normalizedSearchTerm);
     
-    // Find all matches without overlap for all search terms
     const matches = [];
     let lastEnd = 0;
     
@@ -116,7 +135,6 @@ function handleCommentSearch(commentId, searchTerm) {
         let bestMatch = -1;
         let bestMatchTerm = null;
         
-        // Find the earliest match among all search terms
         for (const term of searchTerms) {
             const matchIndex = normalizedText.indexOf(term, lastEnd);
             if (matchIndex !== -1 && (bestMatch === -1 || matchIndex < bestMatch)) {
@@ -226,6 +244,33 @@ function normalizeText(text) {
     return normalized;
 }
 
+// Helper function to ensure space before closing spans
+function ensureSpaceBeforeClosing(element) {
+    const langSpans = element.querySelectorAll('span.eng-lang, span.pli-lang');
+    
+    langSpans.forEach(span => {
+        let html = span.innerHTML;
+        const lastLink = span.querySelector('a:last-child');
+        
+        if (lastLink) {
+            // Case with last anchor tag
+            const beforeLink = html.slice(0, html.lastIndexOf(lastLink.outerHTML)).trim();
+            if (!beforeLink.endsWith(' ')) {
+                html = beforeLink + ' ' + lastLink.outerHTML;
+                span.innerHTML = html;
+            }
+        } else {
+            // Case without anchor tag
+            if (!html.trim().endsWith(' ')) {
+                html = html.trimEnd() + ' ';
+                span.innerHTML = html;
+            }
+        }
+    });
+}
+
+
+
 function handleVerseSearch(verseRange, searchTerm, isPali) {
     let segments;
     if (verseRange.includes('_')) {
@@ -237,6 +282,10 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
 
     if (!segments.length) return;
 
+    segments.forEach(segment => {
+        ensureSpaceBeforeClosing(segment);
+    });
+
     const langClass = isPali ? 'pli-lang' : 'eng-lang';
     
     // Filter out empty segments and prepare segment data
@@ -245,33 +294,14 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
         if (!langSpan) return null;
 
         const originalHtml = langSpan.innerHTML;
-        const tags = [];
-        let workingHtml = originalHtml;
+        const textAndTags = extractTextAndTags(originalHtml);
         
-        // Find all <a> tags
-        const linkRegex = /<a[^>]*>.*?<\/a>/g;
-        let match;
-        while ((match = linkRegex.exec(originalHtml)) !== null) {
-            tags.push({
-                start: match.index,
-                end: match.index + match[0].length,
-                tag: match[0]
-            });
-        }
-
-        // Remove <a> tags and normalize HTML spaces
-        const searchText = workingHtml.replace(linkRegex, '')
-                                    .replace(/&nbsp;/g, ' ')
-                                    .replace(/\s+/g, ' ');
-
         // Skip empty or whitespace-only segments
-        if (!searchText.trim()) return null;
+        if (!textAndTags.plainText.trim()) return null;
 
         return {
             element: langSpan,
-            searchText,
-            originalHtml,
-            tags,
+            ...textAndTags,
             id: segment.getAttribute('id')
         };
     }).filter(Boolean);
@@ -283,13 +313,13 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
     segmentsData.forEach(data => {
         segmentBoundaries.push({
             start: combinedText.length,
-            length: data.searchText.length,
+            length: data.plainText.length,
             data
         });
-        combinedText += data.searchText;
+        combinedText += data.plainText;
     });
 
-	const normalizeText = text => {
+    const normalizeText = text => {
         let normalized = text.toLowerCase();
         if (isPali) {
             normalized = removeDiacritics(normalized);
@@ -300,22 +330,91 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
     const normalizedSearchTerm = normalizeText(searchTerm);
     const normalizedText = normalizeText(combinedText);
 
-    // Create alternate search terms for different ellipsis characters
-    const searchTerms = [normalizedSearchTerm];
-    if (normalizedSearchTerm.includes('...')) {
-        searchTerms.push(normalizedSearchTerm.replace(/\.\.\./g, '…'));
-    } else if (normalizedSearchTerm.includes('…')) {
-        searchTerms.push(normalizedSearchTerm.replace(/…/g, '...'));
+    // Utiliser la nouvelle fonction pour générer les variantes
+    const searchTerms = generateSearchVariants(normalizedSearchTerm);
+
+    const matches = findAllMatches(normalizedText, searchTerms);
+
+    if (!matches.length) return;
+
+    // Process each match and update all affected segments
+    matches.forEach(({ start, end }) => {
+        const affectedSegments = segmentBoundaries.filter(boundary => {
+            const segmentStart = boundary.start;
+            const segmentEnd = boundary.start + boundary.length;
+            return (start < segmentEnd && end > segmentStart);
+        });
+
+        affectedSegments.forEach(boundary => {
+            const { element, plainText, tags } = boundary.data;
+            const segmentStart = boundary.start;
+            
+            // Calculate match position within this segment
+            const matchStartInSegment = Math.max(0, start - segmentStart);
+            const matchEndInSegment = Math.min(boundary.length, end - segmentStart);
+
+            element.innerHTML = reconstructHtmlWithHighlight(
+                plainText,
+                tags,
+                matchStartInSegment,
+                matchEndInSegment
+            );
+        });
+    });
+}
+
+function extractTextAndTags(html) {
+    const tags = [];
+    const emTags = [];
+    let plainText = html;
+    let offset = 0;
+
+    // First extract <a> tags
+    const linkRegex = /<a[^>]*>.*?<\/a>/g;
+    let match;
+    while ((match = linkRegex.exec(html)) !== null) {
+        tags.push({
+            type: 'a',
+            start: match.index - offset,
+            end: match.index + match[0].length - offset,
+            tag: match[0]
+        });
+        offset += match[0].length;
     }
 
-    let lastMatchIndex = 0;
+    // Then extract <em> tags content and position
+    const emRegex = /<em>(.*?)<\/em>/g;
+    plainText = plainText.replace(linkRegex, '');
+    offset = 0;
+    
+    while ((match = emRegex.exec(plainText)) !== null) {
+        const content = match[1];
+        emTags.push({
+            type: 'em',
+            start: match.index - offset,
+            end: match.index + content.length - offset,
+            content: content
+        });
+        offset += match[0].length - content.length;
+    }
+
+    // Remove all HTML tags for plain text
+    plainText = plainText.replace(/<[^>]*>/g, '');
+
+    return {
+        plainText,
+        tags: [...tags, ...emTags].sort((a, b) => a.start - b.start)
+    };
+}
+
+function findAllMatches(normalizedText, searchTerms) {
     const matches = [];
+    let lastMatchIndex = 0;
 
     while (true) {
         let bestMatch = -1;
         let bestMatchTerm = null;
         
-        // Find the earliest match among all search terms
         for (const term of searchTerms) {
             const matchIndex = normalizedText.indexOf(term, lastMatchIndex);
             if (matchIndex !== -1 && (bestMatch === -1 || matchIndex < bestMatch)) {
@@ -334,59 +433,56 @@ function handleVerseSearch(verseRange, searchTerm, isPali) {
         lastMatchIndex = bestMatch + bestMatchTerm.length;
     }
 
-    if (!matches.length) return;
+    return matches;
+}
 
-    // Process each match and update all affected segments
-    matches.forEach(({ start, end }) => {
-        // Find all segments that this match spans
-        const affectedSegments = segmentBoundaries.filter(boundary => {
-            const segmentStart = boundary.start;
-            const segmentEnd = boundary.start + boundary.length;
-            return (start < segmentEnd && end > segmentStart);
-        });
+function reconstructHtmlWithHighlight(text, tags, highlightStart, highlightEnd) {
+    let result = '';
+    let currentPos = 0;
 
-        affectedSegments.forEach(boundary => {
-            const { element, originalHtml, searchText, tags } = boundary.data;
-            const segmentStart = boundary.start;
+    tags.forEach(tag => {
+        // Add text before the tag
+        if (tag.start > currentPos) {
+            result += applyHighlight(
+                text.slice(currentPos, tag.start),
+                Math.max(0, highlightStart - currentPos),
+                Math.min(tag.start - currentPos, highlightEnd - currentPos)
+            );
+        }
+
+        // Handle the tag based on its type
+        if (tag.type === 'a') {
+            result += tag.tag;
+        } else if (tag.type === 'em') {
+            // For em tags, we need to check if their content needs highlighting
+            const emContent = text.slice(tag.start, tag.end);
+            const emHighlightStart = Math.max(0, highlightStart - tag.start);
+            const emHighlightEnd = Math.min(tag.end - tag.start, highlightEnd - tag.start);
             
-            // Calculate the portion of the match that falls within this segment
-            const matchStartInSegment = Math.max(0, start - segmentStart);
-            const matchEndInSegment = Math.min(boundary.length, end - segmentStart);
-
-            let highlightedText = '';
-            let currentPos = 0;
-            let lastTagEnd = 0;
-
-            // Sort tags by start position
-            const sortedTags = [...tags].sort((a, b) => a.start - b.start);
-
-            // Process text and tags in order
-            sortedTags.forEach(tag => {
-                // Add text before the tag if any
-                if (tag.start > currentPos) {
-                    const textBeforeTag = searchText.slice(currentPos, tag.start);
-                    highlightedText += applyHighlight(textBeforeTag, 
-                                                    matchStartInSegment - currentPos, 
-                                                    matchEndInSegment - currentPos);
-                }
-
-                // Add the tag
-                highlightedText += tag.tag;
-                currentPos = tag.start;
-                lastTagEnd = tag.end;
-            });
-
-            // Add remaining text after last tag
-            if (currentPos < searchText.length) {
-                const remainingText = searchText.slice(currentPos);
-                highlightedText += applyHighlight(remainingText,
-                                                matchStartInSegment - currentPos,
-                                                matchEndInSegment - currentPos);
+            if (emHighlightStart < emContent.length && emHighlightEnd > 0) {
+                result += '<em>' + applyHighlight(
+                    emContent,
+                    emHighlightStart,
+                    emHighlightEnd
+                ) + '</em>';
+            } else {
+                result += '<em>' + emContent + '</em>';
             }
+        }
 
-            element.innerHTML = highlightedText;
-        });
+        currentPos = tag.end;
     });
+
+    // Add remaining text after last tag
+    if (currentPos < text.length) {
+        result += applyHighlight(
+            text.slice(currentPos),
+            Math.max(0, highlightStart - currentPos),
+            Math.min(text.length - currentPos, highlightEnd - currentPos)
+        );
+    }
+
+    return result;
 }
 
 // Helper function to apply highlight to a text segment
