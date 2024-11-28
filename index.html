@@ -1,89 +1,401 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="index.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous">
-    <link rel="icon" type="image/jpeg" href="./images/favicon.jpg">
-    <link rel="manifest" href="/manifest.json">
-    <title>Hillside Hermitage Sutta Translations</title>
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:type" content="article" />
-    <meta property="og:title" content="Early Buddhist Suttas" />
-    <meta property="og:description" content="Sutta Translations from Hillside Hermitage" />
-    <meta property="og:url" content="https://suttas.hillsidehermitage.org/" />
-    <meta property="og:site_name" content="suttas.hillsidehermitage.org" />
-    <meta property="og:image" itemprop="image" content="https://suttas.hillsidehermitage.org/images/favicon.jpg" />
-    <script defer src="js/showdown.min.js"></script>
-	<script defer src="js/utils/navigation/redirectSuttaUrl.js"></script>
-	<script>
-        (function() {
-	    // While waiting body to be displayed we apply .dark on html to prevent flashing
-	    document.documentElement.classList.add(localStorage.theme);
-        })();
-    </script>
-    <script>
-       if ('serviceWorker' in navigator) {
-		  window.addEventListener('load', () => {
-			navigator.serviceWorker.getRegistrations().then(registrations => {
-			  if (registrations.length === 0) {
-				// Service worker is not yet registered, so register it
-				navigator.serviceWorker.register('sw.js')
-				  .then(registration => {
-					console.log('[SUCCESS] Service Worker registered with scope:', registration.scope);
-				  })
-				  .catch(error => {
-					console.error('[ERROR] Service Worker registration failed:', error);
-				  });
-			  } else {
-				console.log('[INFO] Service Worker is already registered');
-			  }
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="index.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous">
+		<link rel="icon" type="image/jpeg" href="./images/favicon.jpg">
+		<link rel="manifest" href="/manifest.json">
+		<title>Hillside Hermitage Sutta Translations</title>
+		<meta property="og:locale" content="en_US" />
+		<meta property="og:type" content="article" />
+		<meta property="og:title" content="Early Buddhist Suttas" />
+		<meta property="og:description" content="Sutta Translations from Hillside Hermitage" />
+		<meta property="og:url" content="https://suttas.hillsidehermitage.org/" />
+		<meta property="og:site_name" content="suttas.hillsidehermitage.org" />
+		<meta property="og:image" itemprop="image" content="https://suttas.hillsidehermitage.org/images/favicon.jpg" />
+		<script defer src="js/showdown.min.js"></script>
+		<script defer src="js/utils/navigation/redirectSuttaUrl.js"></script>
+		<script>
+			(function() {
+				// While waiting body to be displayed we apply .dark on html to prevent flashing
+				document.documentElement.classList.add(localStorage.theme);
+			})();
+		</script>
+		<script>
+			if ('serviceWorker' in navigator) {
+				window.addEventListener('load', () => {
+					navigator.serviceWorker.getRegistrations().then(registrations => {
+						if (registrations.length === 0) {
+							// Service worker is not yet registered, so register it
+							navigator.serviceWorker.register('sw.js').then(registration => {
+								console.log('[SUCCESS] Service Worker registered with scope:', registration.scope);
+							}).catch(error => {
+								console.error('[ERROR] Service Worker registration failed:', error);
+							});
+						} else {
+							console.log('[INFO] Service Worker is already registered');
+						}
+					});
+				});
+			}
+		</script>
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const clickableButtons = document.querySelectorAll('.nav-btn.clickable');
+				// Close all submenus when clicking outside
+				document.addEventListener('click', function(event) {
+					if (!event.target.closest('.nav-btn.clickable')) {
+						clickableButtons.forEach(btn => {
+							btn.classList.remove('active');
+						});
+					}
+				});
+				// Toggle submenu when clicking on clickable buttons
+				clickableButtons.forEach(button => {
+					button.addEventListener('click', function(event) {
+						event.stopPropagation();
+						// Close other open menus
+						clickableButtons.forEach(btn => {
+							if (btn !== button) {
+								btn.classList.remove('active');
+							}
+						});
+						// Toggle current menu
+						button.classList.toggle('active');
+					});
+				});
+				// Prevent clicks inside submenu from closing it
+				document.querySelectorAll('.nav-submenu').forEach(submenu => {
+					submenu.addEventListener('click', function(event) {
+						event.stopPropagation();
+					});
+				});
 			});
-            
-		  });
-}
-    </script>
-</head>
+		</script>
+		<style>
+			.navbar-container {
+				display: flex;
+				flex-direction: column;
+				width: 100%;
+			}
 
-<body id='appbody' class="hidden">
-    <div id="header-placeholder"></div>
-    <form id="form">
-        <div class="search-icon">
-            <svg width="13" height="13" viewBox="3 3 18 18">
-                <path 
-                    d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"
-                    fill="currentColor" />
-            </svg>
-        </div>
-        <input id="search-bar" type="text" placeholder="Search by citation, title or content">
-		<div class="advanced-icon">
-			<a href="advanced-search.html">
-				<svg width="15" height="15" viewBox="0 0 512 512"><path fill="#808080" d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z"/></svg>
-			</a>
+			.navbar {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 0.5rem 2rem;
+				background: #f8f9fa;
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+				position: relative;
+				z-index: 1000;
+			}
+
+			.navbar a {
+				text-decoration: none;
+			}
+
+			.nav-left {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+			}
+
+			.nav-btn {
+				padding: 0.5rem 1rem;
+				border: none;
+				background: none;
+				color: #333;
+				font-size: 0.9rem;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				position: relative;
+				min-width: 100px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.5rem;
+			}
+
+			.dark .nav-btn {
+				color: #fff;
+			}
+
+			.nav-btn:hover {
+				background: rgba(0, 0, 0, 0.05);
+				border-radius: 4px;
+			}
+
+			.nav-btn:not(.clickable)::after {
+				content: '▾';
+				margin-left: 0.5rem;
+			}
+
+			.nav-btn.clickable::after {
+				content: '▾';
+				margin-left: 0.5rem;
+				transition: transform 0.3s ease;
+			}
+
+			.nav-btn.clickable.active::after {
+				transform: rotate(180deg);
+			}
+
+			.nav-submenu {
+				position: absolute;
+				top: 100%;
+				background: #fff;
+				border-radius: 4px;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+				min-width: 200px;
+				opacity: 0;
+				visibility: hidden;
+				transform: translateY(-10px);
+				transition: all 0.3s ease;
+				z-index: 1000;
+			}
+
+			.dark .nav-submenu {
+				background: #2d2d2d;
+			}
+
+			.nav-btn:not(.clickable):hover+.nav-submenu,
+			.nav-submenu:hover {
+				opacity: 1;
+				visibility: visible;
+				transform: translateY(0);
+			}
+
+			.nav-btn.clickable.active+.nav-submenu {
+				opacity: 1;
+				visibility: visible;
+				transform: translateY(0);
+			}
+
+			.nav-subbtn {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+				width: 100%;
+				padding: 0.75rem 1rem;
+				border: none;
+				background: none;
+				color: #333;
+				font-size: 0.9rem;
+				text-align: left;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				text-decoration: none;
+			}
+
+			.dark .nav-subbtn {
+				color: #fff;
+			}
+
+			.nav-subbtn:hover {
+				background: rgba(0, 0, 0, 0.05);
+			}
+
+			.dark .nav-subbtn:hover {
+				background: rgba(255, 255, 255, 0.1);
+			}
+
+			.nav-right {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+			}
+
+			.nav-btn::after {
+				display: none;
+			}
+
+			.nav-btn:not(.clickable):has(+ .nav-submenu)::after {
+				display: inline;
+				content: '▾';
+				margin-left: 0.5rem;
+			}
+
+			.nav-btn.clickable::after {
+				display: inline;
+				content: '▾';
+				margin-left: 0.5rem;
+				transition: transform 0.3s ease;
+			}
+
+			.nav-submenu {
+				overflow: hidden;
+				/* Empêche le débordement de l'animation hover */
+			}
+
+			.nav-btn.clickable+.nav-submenu {
+				position: fixed;
+				top: 60px;
+				/* Ajuster selon la hauteur de votre navbar */
+				right: 0;
+				left: 0;
+				height: calc(100vh - 60px);
+				/* Prend toute la hauteur restante */
+				display: flex;
+				flex-direction: column;
+				padding: 1rem;
+				background: rgba(255, 255, 255, 0.95);
+				z-index: 999;
+			}
+
+			.dark .nav-btn.clickable+.nav-submenu {
+				background: rgba(45, 45, 45, 0.95);
+			}
+
+			/* Message placeholder pour le menu settings */
+			.nav-btn.clickable+.nav-submenu::after {
+				content: 'Settings menu content coming soon...';
+				text-align: center;
+				padding: 2rem;
+				color: #666;
+			}
+
+			.dark .nav-btn.clickable+.nav-submenu::after {
+				color: #999;
+			}
+
+			.nav-submenu.active {
+				opacity: 1;
+				visibility: visible;
+				transform: translateY(0);
+			}
+		</style>
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const settingsButton = document.querySelector('.nav-btn.clickable');
+				const settingsMenu = settingsButton.parentElement.querySelector('.nav-submenu');
+				// Close settings menu when clicking outside
+				document.addEventListener('click', function(event) {
+					if (!event.target.closest('.nav-btn.clickable') && !event.target.closest('.nav-submenu')) {
+						settingsButton.classList.remove('active');
+					}
+				});
+				// Toggle settings menu on click
+				settingsButton.addEventListener('click', function(event) {
+					event.stopPropagation();
+					this.classList.toggle('active');
+					settingsMenu.classList.toggle('active');
+				});
+				// Prevent clicks inside settings menu from closing it
+				settingsMenu.addEventListener('click', function(event) {
+					event.stopPropagation();
+				});
+			});
+		</script>
+	</head>
+	<body id='appbody' class="hidden">
+		<div class="navbar-container">
+			<nav class="navbar">
+				<div class="nav-left">
+					<a href="/" class="nav-btn">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+							<polyline points="9 22 9 12 15 12 15 22"></polyline>
+						</svg>
+					</a>
+					<div style="position: relative;">
+						<button class="nav-btn">Tools</button>
+						<div class="nav-submenu" style="left: 0;">
+							<a href="/bookmarks.html" class="nav-subbtn">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"></path>
+								</svg> Bookmarks </a>
+							<a href="/glossary.html" class="nav-subbtn">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path>
+									<path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path>
+								</svg> Glossary </a>
+							<a href="/comments.html" class="nav-subbtn">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path>
+								</svg> Comments </a>
+							<a href="/advanced-search.html" class="nav-subbtn">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<circle cx="11" cy="11" r="8"></circle>
+									<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+								</svg> Advanced Search </a>
+						</div>
+					</div>
+					<div style="position: relative;">
+						<button class="nav-btn">Links</button>
+						<div class="nav-submenu" style="left: 0;">
+							<a href="https://github.com/bkhpanigha/hh-suttas" class="nav-subbtn" target="_blank">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+								</svg> GitHub </a>
+							<a href="https://www.youtube.com/channel/UCKejmWAt_kNpRMq5gQEGAqw" class="nav-subbtn" target="_blank">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.33z"></path>
+									<polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+								</svg> YouTube </a>
+							<a href="https://www.hillsidehermitage.org/support-us/" class="nav-subbtn" target="_blank">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"></path>
+								</svg> Support Us </a>
+						</div>
+					</div>
+					<a href="/downloads.html" class="nav-btn">Downloads</a>
+					<a href="/about.html" class="nav-btn">About</a>
+				</div>
+				<div class="nav-right">
+					<button class="nav-btn clickable">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<circle cx="12" cy="12" r="3"></circle>
+							<path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+						</svg>
+					</button>
+					<div class="nav-submenu" style="right: 0;">
+						<div>
+							<h1>Settings</h1>
+							<span>Font size</span>
+						</div>
+					</div>
+			</nav>
+			<form id="form">
+				<div class="search-icon">
+					<svg width="13" height="13" viewBox="3 3 18 18">
+						<path d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14" fill="currentColor"></path>
+					</svg>
+				</div>
+				<input id="search-bar" type="text" placeholder="Search by citation, title or content">
+				<div class="advanced-icon">
+					<a href="advanced-search.html">
+						<svg width="15" height="15" viewBox="0 0 512 512">
+							<path fill="#808080" d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z"></path>
+						</svg>
+					</a>
+				</div>
+			</form>
 		</div>
-    </form>
-    <div id="app-content">
-      <div id="whats-new"></div>
-      <div id="sutta">
-          <div style="display: flex; justify-content: center;"><span id="foreword-button" class="foreword-link">Foreword</span></div>
-      </div>
-    </div>
-    <hr />
-    <div id="navigation" class="navigation">
-        <div id="previous"></div>
-        <div id="next"></div>
-    </div>
-    <div id="footer">
-        <div id="footer" class="container">
-            <button id="hardRefresh" class="box-button orange">Reset website</button>
-            <button id="reportButton" class="box-button red">Report an error</button>
-            <a style="margin: 5px" href="https://hillsidehermitage.org">Hillside Hermitage Website</a>
-        </div>
-    </div>
-    <script src="js/utils/contentSections/loadHeader.js"></script>
-    <script type="module" src="index.js"></script>
-</body>
+		</div>
+		<div id="app-content">
+			<div id="whats-new"></div>
+			<div id="sutta">
+				<div style="display: flex; justify-content: center;">
+					<span id="foreword-button" class="foreword-link">Foreword</span>
+				</div>
+			</div>
+		</div>
+		<hr />
+		<div id="navigation" class="navigation">
+			<div id="previous"></div>
+			<div id="next"></div>
+		</div>
+		<div id="footer">
+			<div id="footer" class="container">
+				<button id="hardRefresh" class="box-button orange">Reset website</button>
+				<button id="reportButton" class="box-button red">Report an error</button>
+				<a style="margin: 5px" href="https://hillsidehermitage.org">Hillside Hermitage Website</a>
+			</div>
+		</div>
+		<script src="js/utils/contentSections/loadHeader.js"></script>
+		<script type="module" src="index.js"></script>
+	</body>
 </html>
