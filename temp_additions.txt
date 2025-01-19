@@ -1,0 +1,145 @@
+DRAFT 1:
+
+sutta-box add:
+	border: 1px solid #ddd;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	background-color: #f9f9f9;
+	
+	
+	
+.icon-title {
+    font-size: 1rem;
+    margin-top: 4px;
+    line-height: 1.2;
+    white-space: nowrap;
+    font-family: "Roboto", serif;
+    font-weight: 500;
+}
+
+#filter-form-container {
+    display: flex;
+    justify-content: left;
+    margin-top: 20px;
+}
+
+#app-content {
+    /* padding-top: 1.2em; */
+}
+
+.sutta-card-title {
+    margin: 0;
+    font-size: 1.1em;
+    color: #1a0dab;
+    font-weight: 500;
+}
+
+.sutta-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #1a0dab;
+}
+
+.sutta-id {
+    font-weight: 600;
+    font-size: 1rem;
+    color: black;
+}
+
+#filter-form {
+    display: flex;
+    align-items: center;
+    background-color: transparent;
+    border: 1px solid var(--lighter-gray);
+    border-radius: 5px;
+    padding: 0.5em;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    width: 350px;
+    cursor: pointer;
+    background-color: #f9f9f9;
+}
+
+.sutta-card {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+.sutta-card-content {
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+    flex-direction: column;
+}
+
+font: roboto
+
+
+DRAFT 2:
+
+.sutta-card {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px;
+    margin-bottom: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+.sutta-card-content {
+    display: flex;
+    justify-content: space-between;
+    gap: 3px;
+    flex-direction: column;
+}
+
+.sutta-id {
+    font-weight: 500;
+    font-size: .9rem;
+    color: black;
+}
+
+.sutta-card .sutta-pali-title {
+    font-size: .9rem;
+    color: #777;
+    margin: 0;
+    font-weight: 500;
+}
+
+.sutta-heading {
+    font-size: .9rem;
+    color: #7f6e0a;
+    font-style: italic;
+    font-weight: 400;
+}
+
+.sutta-card-top, 
+.sutta-card-bottom {
+    width: 100%;
+}
+
+.sutta-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #1a0dab;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#filter-form {
+    display: flex;
+    align-items: center;
+    background-color: transparent;
+    border: 2px solid var(--lighter-gray);
+    border-radius: 5px;
+    padding: .5rem;
+    width: 350px;
+    cursor: pointer;
+    background-color: #f9f9f9;
+}
