@@ -57,7 +57,7 @@ body {
   font-family: "RobotoSerif", serif;
 }
 
-.form-container {
+#filter-form-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -851,11 +851,10 @@ a:hover {
     display: flex;
     gap: 8px;
     overflow-x: auto;
-    padding: 10px 0;
+    padding-bottom: 10px;
 }
 
 .whats-new-container::-webkit-scrollbar {
-    width: 4px;
 	height: 10px;
 	border-radius: 4px;
 }
@@ -873,19 +872,31 @@ a:hover {
 }
 
 .whats-new-container::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-hover);
 	background: #aaa;
 }
 
 /* Individual sutta box */
 .sutta-box {
-    flex: 0 0 auto;
+    flex: 1 0 auto;
     width: 180px;
     border: 1px solid var(--lighter-gray);
     padding: 8px;
     text-align: center;
     border-radius: 5px;
 	box-shadow: 1px 1px 3px rgba(23, 43, 77, 0.1);
+	transition: background-color 0.3s ease;
+	min-height: 130px;
+	display: flex;
+    flex-direction: column;
+    justify-content: center;
+	border: 1px solid #ddd;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+}
+
+.sutta-box:hover{
+	text-decoration: none;
+	background-color: var(--off-white);
 }
 
 /* Sutta title style */
@@ -911,8 +922,7 @@ a:hover {
 
 /* Additional tweaks for spacing and compactness */
 .sutta-box h3,
-.sutta-pali-title,
-.sutta-date-added {
+.sutta-pali-title {
   margin-bottom: 5px;
   /* Reduced margin between elements */
 }
@@ -1083,7 +1093,7 @@ bookmarkButton {
 }
 
 #top-buttons .icon-button:hover {
-  background-color: var(--lighter-gray);
+  background-color: var(--off-white);
   color: var(--darker-brown);
 }
 
@@ -1144,5 +1154,82 @@ bookmarkButton {
     margin: 0.2rem;
     padding: 0.2rem 0.4rem;
     font-size: 10px;
+  }
+}
+
+.sutta-card {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+.sutta-card:hover{
+	background-color: var(--off-white);
+}
+
+.sutta-card > a{
+	text-decoration: none;
+}
+
+.sutta-card-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.sutta-card-top,
+.sutta-card-bottom{
+  flex: 1;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.sutta-card-top > *,
+.sutta-card-bottom > *{
+	width: 50%;
+}
+
+.sutta-card-left,
+.sutta-card-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sutta-id {
+    font-weight: 500;
+    font-size: 1rem;
+    color: black;
+}
+
+.sutta-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #1a0dab;
+}
+
+.sutta-card .sutta-pali-title {
+    font-size: 1rem;
+    color: #777;
+    margin: 0;
+    word-wrap: break-word;
+}
+
+.sutta-heading {
+  font-size: 1rem;
+  color: #7f6e0a;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .sutta-card-content {
+    flex-direction: column;
   }
 }
