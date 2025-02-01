@@ -31,7 +31,10 @@ export function displaySuttas(suttas, isSearch = false)
 		const hasDescriptionOrHeading = sutta_details['description'] || sutta_details['heading'];
 
 		const description = hasDescriptionOrHeading 
-			? `<hr class="sutta-card-divider"/><div class="sutta-card-description">${sutta_details['description'] || sutta_details['heading']}</div>` 
+			? `<hr class="sutta-card-divider"/>
+				<div class="sutta-card-description ${sutta_details['description'] ? 'description' : 'heading'}">
+					${sutta_details['description'] || sutta_details['heading']}
+				</div>`
 			: '';
 
 		const card = `<li class="sutta-card">
@@ -63,5 +66,4 @@ export function displaySuttas(suttas, isSearch = false)
 			return `${card}`;
 		}
 	}).join('')}</ul>`;
-
 }
